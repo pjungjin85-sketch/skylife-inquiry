@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
 :root {
   --red: #E60012; --red2: #CC0010; --red-light: #FFF5F5; --red-border: #FFCCCC;
@@ -168,6 +169,11 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+const EMAILJS_SERVICE  = 'service_x0frvsh';
+const EMAILJS_TEMPLATE = 'template_nc00thq';
+const EMAILJS_KEY      = 'N0yWRhej7wsSM_IM3';
+emailjs.init(EMAILJS_KEY);
+
 function switchTab(tab) {
   document.getElementById('pane-write').style.display = tab === 'write' ? 'block' : 'none';
   document.getElementById('pane-list').style.display  = tab === 'list'  ? 'block' : 'none';
@@ -195,6 +201,9 @@ async function submitInquiry() {
   btn.disabled = false; btn.textContent = '문의 접수';
 
   if (error) { showAlert('error', '오류가 발생했습니다. 다시 시도해주세요.'); return; }
+
+  emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, { name, department: dept, category: cat, contact: contact || '미입력', content })
+    .catch(() => {}); // 이메일 실패해도 접수는 완료된 것으로 처리
 
   showAlert('success', '✅ 문의가 접수되었습니다. 관리자가 확인 후 답변드립니다.');
   ['f-name','f-dept','f-contact','f-content'].forEach(id => document.getElementById(id).value = '');

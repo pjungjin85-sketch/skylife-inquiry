@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>스카이라이프 문의 관리자</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --red: #E60012; --red2: #CC0010; --red-light: #FFF5F5; --red-border: #FFCCCC;
+  --black: #1A1A1A; --dark: #333333; --mid: #666666; --light: #999999;
+  --bg: #FFFFFF; --bg2: #F7F7F7; --bg3: #FAFAFA; --border: #E8E8E8;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08); --shadow-hover: 0 8px 28px rgba(0,0,0,0.14);
+  --green: #16a34a; --green-light: #f0fdf4; --green-border: #bbf7d0;
+  --yellow: #d97706; --yellow-light: #fffbeb; --yellow-border: #fde68a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg2); color: var(--black); min-height: 100vh; }
+
+/* 잠금 화면 */
+#lock-overlay { position: fixed; inset: 0; background: var(--bg2); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
+#lock-overlay.hidden { display: none; }
+.lock-box { background: var(--bg); border: 1px solid var(--border); border-top: 4px solid var(--red); border-radius: 16px; padding: 40px 32px; width: 100%; max-width: 360px; box-shadow: var(--shadow); }
+.lock-logo { font-size: 18px; font-weight: 900; color: var(--black); margin-bottom: 4px; }
+.lock-logo span { color: var(--red); }
+.lock-title { font-size: 14px; color: var(--mid); margin-bottom: 28px; }
+.lock-label { font-size: 12px; font-weight: 700; color: var(--dark); margin-bottom: 6px; }
+.lock-input-wrap { position: relative; margin-bottom: 10px; }
+.lock-input-wrap input { width: 100%; padding: 12px 44px 12px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; outline: none; }
+.lock-input-wrap input:focus { border-color: var(--red); }
+.lock-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px; }
+.lock-error { font-size: 12px; color: var(--red); min-height: 18px; margin-bottom: 16px; }
+.lock-btn { width: 100%; padding: 13px; background: var(--red); color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.lock-btn:hover { background: var(--red2); }
+
+/* 헤더 */
+header { background: var(--bg); border-top: 3px solid var(--red); border-bottom: 1px solid var(--border); padding: 0 20px; position: sticky; top: 0; z-index: 200; box-shadow: var(--shadow); }
+.header-inner { max-width: 860px; margin: 0 auto; display: flex; align-items: center; height: 56px; gap: 12px; }
+.logo-text { font-size: 18px; font-weight: 900; color: var(--black); }
+.logo-text span { color: var(--red); }
+.header-badge { background: var(--red); color: #fff; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 3px; }
+.header-title { font-size: 15px; font-weight: 700; color: var(--dark); }
+.logout-btn { margin-left: auto; padding: 6px 14px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; color: var(--mid); background: var(--bg); cursor: pointer; font-family: inherit; }
+.logout-btn:hover { border-color: var(--red); color: var(--red); }
+
+/* 본문 */
+.content { max-width: 860px; margin: 0 auto; padding: 24px 20px; }
+
+/* 통계 바 */
+.stats-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.stat-box { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; flex: 1; min-width: 120px; box-shadow: var(--shadow); }
+.stat-num { font-size: 24px; font-weight: 900; color: var(--black); }
+.stat-label { font-size: 11px; color: var(--light); margin-top: 2px; }
+.stat-box.pending .stat-num { color: var(--yellow); }
+.stat-box.answered .stat-num { color: var(--green); }
+
+/* 필터 탭 */
+.filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-btn { padding: 7px 16px; border: 1px solid var(--border); border-radius: 20px; font-size: 13px; font-weight: 500; color: var(--mid); background: var(--bg); cursor: pointer; font-family: inherit; transition: all .2s; }
+.filter-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
+
+/* 문의 카드 */
+.inquiry-card { background: var(--bg); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 12px; overflow: hidden; box-shadow: var(--shadow); }
+.inquiry-card.is-answered { border-left: 3px solid var(--green); }
+.card-head { padding: 16px 18px; cursor: pointer; display: flex; align-items: flex-start; gap: 12px; }
+.card-head-info { flex: 1; min-width: 0; }
+.card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+.cat-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; background: var(--red-light); color: var(--red); border: 1px solid var(--red-border); }
+.status-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; }
+.status-badge.pending { background: var(--yellow-light); color: var(--yellow); border: 1px solid var(--yellow-border); }
+.status-badge.answered { background: var(--green-light); color: var(--green); border: 1px solid var(--green-border); }
+.card-meta { font-size: 11px; color: var(--light); margin-bottom: 4px; }
+.card-preview { font-size: 13px; color: var(--mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-chevron { font-size: 12px; color: var(--light); flex-shrink: 0; transition: transform .2s; padding-top: 2px; }
+.card-open .card-chevron { transform: rotate(180deg); }
+
+.card-body { display: none; border-top: 1px solid var(--border); padding: 20px 18px; }
+.card-open .card-body { display: block; }
+
+.body-section { margin-bottom: 16px; }
+.body-label { font-size: 11px; font-weight: 700; color: var(--light); letter-spacing: .04em; text-transform: uppercase; margin-bottom: 6px; }
+.body-text { font-size: 13px; color: var(--dark); line-height: 1.7; white-space: pre-wrap; }
+
+/* 답변 영역 */
+.reply-existing { background: var(--green-light); border: 1px solid var(--green-border); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
+.reply-existing .body-label { color: var(--green); }
+.reply-date { font-size: 11px; color: var(--light); margin-top: 6px; }
+
+.reply-form { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.reply-form .body-label { color: var(--dark); margin-bottom: 8px; }
+.reply-form textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; line-height: 1.6; resize: vertical; min-height: 90px; outline: none; }
+.reply-form textarea:focus { border-color: var(--green); }
+.reply-actions { display: flex; gap: 8px; margin-top: 10px; justify-content: flex-end; }
+.reply-save-btn { padding: 9px 20px; background: var(--green); color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.reply-save-btn:hover { background: #15803d; }
+.reply-save-btn:disabled { background: var(--light); cursor: not-allowed; }
+.reply-del-btn { padding: 9px 16px; background: var(--bg); color: var(--mid); border: 1px solid var(--border); border-radius: 8px; font-size: 13px; cursor: pointer; font-family: inherit; }
+.reply-del-btn:hover { border-color: var(--red); color: var(--red); }
+
+.save-feedback { font-size: 12px; margin-top: 8px; min-height: 16px; }
+.save-feedback.ok { color: var(--green); }
+.save-feedback.fail { color: var(--red); }
+
+.loading { text-align: center; padding: 48px 20px; color: var(--light); font-size: 14px; }
+.empty { text-align: center; padding: 48px 20px; }
+.empty-icon { font-size: 40px; margin-bottom: 12px; }
+.empty-text { font-size: 14px; color: var(--light); }
+
+footer { text-align: center; padding: 24px 20px; font-size: 11px; color: var(--light); border-top: 1px solid var(--border); background: var(--bg); margin-top: 40px; }
+
+@media (max-width: 480px) { .content { padding: 16px 14px; } }
+</style>
+</head>
+<body>
+
+<!-- 잠금 화면 -->
+<div id="lock-overlay">
+  <div class="lock-box">
+    <div class="lock-logo">kt <span>skylife</span></div>
+    <div class="lock-title">관리자 전용 페이지</div>
+    <div class="lock-label">비밀번호</div>
+    <div class="lock-input-wrap">
+      <input type="password" id="pw-input" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')checkPw()">
+      <button class="lock-toggle" id="pw-toggle" onclick="togglePw()">👁</button>
+    </div>
+    <div class="lock-error" id="pw-error"></div>
+    <button class="lock-btn" onclick="checkPw()">확인</button>
+  </div>
+</div>
+
+<header>
+  <div class="header-inner">
+    <span class="logo-text">kt <span>skylife</span></span>
+    <span class="header-badge">관리자</span>
+    <span class="header-title">문의 관리</span>
+    <button class="logout-btn" onclick="logout()">로그아웃</button>
+  </div>
+</header>
+
+<div class="content">
+  <div class="stats-bar">
+    <div class="stat-box">
+      <div class="stat-num" id="stat-total">-</div>
+      <div class="stat-label">전체 문의</div>
+    </div>
+    <div class="stat-box pending">
+      <div class="stat-num" id="stat-pending">-</div>
+      <div class="stat-label">답변 대기</div>
+    </div>
+    <div class="stat-box answered">
+      <div class="stat-num" id="stat-answered">-</div>
+      <div class="stat-label">답변 완료</div>
+    </div>
+  </div>
+  <div class="filter-bar">
+    <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">전체</button>
+    <button class="filter-btn" data-filter="pending" onclick="setFilter('pending')">답변 대기</button>
+    <button class="filter-btn" data-filter="answered" onclick="setFilter('answered')">답변 완료</button>
+  </div>
+  <div id="list-container"></div>
+</div>
+
+<footer>Created by 박정진 &nbsp;|&nbsp; 스카이라이프 모바일 문의 관리자</footer>
+
+<script>
+const SUPABASE_URL = 'https://zeiygknvggokauetgrzk.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InplaXlna252Z2dva2F1ZXRncnprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjE4NzgsImV4cCI6MjA5MDczNzg3OH0.hTipybUz3nfgy_J2sSonwU8FOtM8Tvh4idsvPNx2OF4';
+const CORRECT_HASH = 'f31e562f38ee4b78a43885e5afec85057cd8a1643397b8577c1d8055a49e0092'; // skylife2026
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let allData = [];
+let currentFilter = 'all';
+
+/* ── 인증 ── */
+async function sha256(m) {
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(m));
+  return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2,'0')).join('');
+}
+function togglePw() {
+  const inp = document.getElementById('pw-input');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+async function checkPw() {
+  const v = document.getElementById('pw-input').value;
+  if (!v) { document.getElementById('pw-error').textContent = '비밀번호를 입력해주세요'; return; }
+  const h = await sha256(v);
+  if (h === CORRECT_HASH) {
+    sessionStorage.setItem('inquiry_admin', '1');
+    document.getElementById('lock-overlay').classList.add('hidden');
+    loadAll();
+  } else {
+    document.getElementById('pw-error').textContent = '비밀번호가 올바르지 않습니다';
+  }
+}
+function logout() {
+  sessionStorage.removeItem('inquiry_admin');
+  location.reload();
+}
+
+/* ── 데이터 로드 ── */
+async function loadAll() {
+  setLoading('불러오는 중...');
+  const { data, error } = await sb.from('inquiries').select('*').order('created_at', { ascending: false });
+  if (error) { setLoading('불러오기 실패. 새로고침해주세요.'); return; }
+  allData = data;
+  updateStats();
+  renderList();
+}
+
+function updateStats() {
+  const pending  = allData.filter(d => d.status === 'pending').length;
+  const answered = allData.filter(d => d.status === 'answered').length;
+  document.getElementById('stat-total').textContent   = allData.length;
+  document.getElementById('stat-pending').textContent  = pending;
+  document.getElementById('stat-answered').textContent = answered;
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === f));
+  renderList();
+}
+
+function renderList() {
+  const filtered = currentFilter === 'all' ? allData : allData.filter(d => d.status === currentFilter);
+  const container = document.getElementById('list-container');
+  container.textContent = '';
+
+  if (!filtered.length) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    const icon = document.createElement('div'); icon.className = 'empty-icon'; icon.textContent = '📭';
+    const text = document.createElement('div'); text.className = 'empty-text'; text.textContent = '문의 내역이 없습니다.';
+    empty.appendChild(icon); empty.appendChild(text);
+    container.appendChild(empty);
+    return;
+  }
+  filtered.forEach(d => container.appendChild(buildCard(d)));
+}
+
+/* ── 카드 빌드 ── */
+function buildCard(d) {
+  const card = document.createElement('div');
+  card.className = 'inquiry-card' + (d.status === 'answered' ? ' is-answered' : '');
+  card.id = 'card-' + d.id;
+
+  const date = new Date(d.created_at).toLocaleDateString('ko-KR', { year:'2-digit', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+
+  // 헤드
+  const head = document.createElement('div');
+  head.className = 'card-head';
+  head.onclick = () => card.classList.toggle('card-open');
+
+  const info = document.createElement('div');
+  info.className = 'card-head-info';
+
+  const top = document.createElement('div');
+  top.className = 'card-top';
+  const catBadge = document.createElement('span');
+  catBadge.className = 'cat-badge';
+  catBadge.textContent = d.category;
+  const statusBadge = document.createElement('span');
+  statusBadge.className = 'status-badge ' + (d.status === 'answered' ? 'answered' : 'pending');
+  statusBadge.textContent = d.status === 'answered' ? '답변완료' : '답변대기';
+  top.appendChild(catBadge); top.appendChild(statusBadge);
+
+  const meta = document.createElement('div');
+  meta.className = 'card-meta';
+  meta.textContent = d.name + ' · ' + d.department + (d.contact ? ' · ' + d.contact : '') + ' · ' + date;
+
+  const preview = document.createElement('div');
+  preview.className = 'card-preview';
+  preview.textContent = d.content;
+
+  info.appendChild(top); info.appendChild(meta); info.appendChild(preview);
+
+  const chevron = document.createElement('span');
+  chevron.className = 'card-chevron';
+  chevron.textContent = '▼';
+
+  head.appendChild(info); head.appendChild(chevron);
+
+  // 바디
+  const body = document.createElement('div');
+  body.className = 'card-body';
+  body.appendChild(createSection('문의 내용', d.content));
+  if (d.contact) body.appendChild(createSection('연락처', d.contact));
+
+  // 기존 답변
+  if (d.status === 'answered' && d.reply) {
+    const existingReply = document.createElement('div');
+    existingReply.className = 'reply-existing body-section';
+    existingReply.id = 'existing-' + d.id;
+    const lbl = document.createElement('div'); lbl.className = 'body-label'; lbl.textContent = '등록된 답변';
+    const txt = document.createElement('div'); txt.className = 'body-text'; txt.textContent = d.reply;
+    existingReply.appendChild(lbl); existingReply.appendChild(txt);
+    if (d.replied_at) {
+      const rd = document.createElement('div'); rd.className = 'reply-date';
+      rd.textContent = new Date(d.replied_at).toLocaleDateString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+      existingReply.appendChild(rd);
+    }
+    body.appendChild(existingReply);
+  }
+
+  // 답변 폼
+  const replyForm = document.createElement('div');
+  replyForm.className = 'reply-form body-section';
+  const replyLbl = document.createElement('div');
+  replyLbl.className = 'body-label';
+  replyLbl.textContent = d.status === 'answered' ? '답변 수정' : '답변 작성';
+  const replyTa = document.createElement('textarea');
+  replyTa.id = 'reply-ta-' + d.id;
+  replyTa.placeholder = '답변 내용을 입력해주세요.';
+  if (d.reply) replyTa.value = d.reply;
+
+  const actions = document.createElement('div');
+  actions.className = 'reply-actions';
+
+  if (d.status === 'answered') {
+    const delBtn = document.createElement('button');
+    delBtn.className = 'reply-del-btn';
+    delBtn.textContent = '답변 삭제';
+    delBtn.onclick = () => deleteReply(d.id);
+    actions.appendChild(delBtn);
+  }
+
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'reply-save-btn';
+  saveBtn.id = 'save-btn-' + d.id;
+  saveBtn.textContent = d.status === 'answered' ? '수정 저장' : '답변 등록';
+  saveBtn.onclick = () => saveReply(d.id);
+
+  actions.appendChild(saveBtn);
+
+  const feedback = document.createElement('div');
+  feedback.className = 'save-feedback';
+  feedback.id = 'feedback-' + d.id;
+
+  replyForm.appendChild(replyLbl);
+  replyForm.appendChild(replyTa);
+  replyForm.appendChild(actions);
+  replyForm.appendChild(feedback);
+  body.appendChild(replyForm);
+
+  card.appendChild(head);
+  card.appendChild(body);
+  return card;
+}
+
+/* ── 답변 저장 ── */
+async function saveReply(id) {
+  const reply = document.getElementById('reply-ta-' + id).value.trim();
+  if (!reply) { showFeedback(id, 'fail', '답변 내용을 입력해주세요.'); return; }
+
+  const btn = document.getElementById('save-btn-' + id);
+  btn.disabled = true; btn.textContent = '저장 중...';
+
+  const { error } = await sb.from('inquiries').update({
+    reply, status: 'answered', replied_at: new Date().toISOString()
+  }).eq('id', id);
+
+  btn.disabled = false;
+
+  if (error) { showFeedback(id, 'fail', '저장 실패. 다시 시도해주세요.'); btn.textContent = '답변 등록'; return; }
+
+  showFeedback(id, 'ok', '✅ 저장되었습니다.');
+  await loadAll();
+}
+
+/* ── 답변 삭제 ── */
+async function deleteReply(id) {
+  if (!confirm('답변을 삭제하고 미답변 상태로 되돌리겠습니까?')) return;
+  const { error } = await sb.from('inquiries').update({ reply: null, status: 'pending', replied_at: null }).eq('id', id);
+  if (error) { alert('삭제 실패'); return; }
+  await loadAll();
+}
+
+function showFeedback(id, type, msg) {
+  const el = document.getElementById('feedback-' + id);
+  if (!el) return;
+  el.className = 'save-feedback ' + type;
+  el.textContent = msg;
+  setTimeout(() => { el.textContent = ''; }, 4000);
+}
+
+function createSection(label, text) {
+  const sec = document.createElement('div'); sec.className = 'body-section';
+  const lbl = document.createElement('div'); lbl.className = 'body-label'; lbl.textContent = label;
+  const txt = document.createElement('div'); txt.className = 'body-text'; txt.textContent = text;
+  sec.appendChild(lbl); sec.appendChild(txt);
+  return sec;
+}
+
+function setLoading(msg) {
+  const el = document.createElement('div'); el.className = 'loading'; el.textContent = msg;
+  const c = document.getElementById('list-container'); c.textContent = ''; c.appendChild(el);
+}
+
+/* ── 초기화 ── */
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('pw-input').focus();
+  if (sessionStorage.getItem('inquiry_admin') === '1') {
+    document.getElementById('lock-overlay').classList.add('hidden');
+    loadAll();
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>스카이라이프 모바일 문의</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+<style>
+:root {
+  --red: #E60012; --red2: #CC0010; --red-light: #FFF5F5; --red-border: #FFCCCC;
+  --black: #1A1A1A; --dark: #333333; --mid: #666666; --light: #999999;
+  --bg: #FFFFFF; --bg2: #F7F7F7; --bg3: #FAFAFA; --border: #E8E8E8;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08); --shadow-hover: 0 8px 28px rgba(0,0,0,0.14);
+  --green: #16a34a; --green-light: #f0fdf4; --green-border: #bbf7d0;
+  --yellow: #d97706; --yellow-light: #fffbeb; --yellow-border: #fde68a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg2); color: var(--black); min-height: 100vh; }
+
+header { background: var(--bg); border-top: 3px solid var(--red); border-bottom: 1px solid var(--border); padding: 0 20px; position: sticky; top: 0; z-index: 200; box-shadow: var(--shadow); }
+.header-inner { max-width: 720px; margin: 0 auto; display: flex; align-items: center; height: 56px; gap: 12px; }
+.logo-text { font-size: 18px; font-weight: 900; color: var(--black); letter-spacing: -.02em; }
+.logo-text span { color: var(--red); }
+.header-badge { background: var(--red); color: #fff; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 3px; letter-spacing: .04em; }
+.header-title { font-size: 15px; font-weight: 700; color: var(--dark); }
+
+.tab-bar { background: var(--bg); border-bottom: 1px solid var(--border); padding: 0 20px; position: sticky; top: 56px; z-index: 100; }
+.tab-inner { max-width: 720px; margin: 0 auto; display: flex; }
+.tab-btn { flex: 1; padding: 14px 0; font-size: 14px; font-weight: 700; color: var(--light); border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; transition: all .2s; font-family: inherit; }
+.tab-btn.active { color: var(--red); border-bottom-color: var(--red); }
+
+.content { max-width: 720px; margin: 0 auto; padding: 24px 20px; }
+
+.form-card { background: var(--bg); border: 1px solid var(--border); border-radius: 16px; padding: 28px 24px; box-shadow: var(--shadow); }
+.form-card h2 { font-size: 16px; font-weight: 900; color: var(--black); margin-bottom: 6px; }
+.form-card .form-desc { font-size: 12px; color: var(--light); margin-bottom: 24px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.form-group label { font-size: 12px; font-weight: 700; color: var(--dark); }
+.req { color: var(--red); margin-left: 2px; }
+.opt { color: var(--light); font-weight: 400; margin-left: 4px; }
+input, select, textarea { width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; color: var(--black); background: var(--bg); transition: border-color .2s; outline: none; }
+input:focus, select:focus, textarea:focus { border-color: var(--red); }
+textarea { resize: vertical; min-height: 120px; line-height: 1.6; }
+.submit-btn { width: 100%; padding: 14px; background: var(--red); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; transition: background .2s; margin-top: 8px; }
+.submit-btn:hover { background: var(--red2); }
+.submit-btn:disabled { background: var(--light); cursor: not-allowed; }
+
+.alert { padding: 14px 16px; border-radius: 10px; font-size: 13px; font-weight: 500; margin-bottom: 16px; display: none; }
+.alert.success { background: var(--green-light); border: 1px solid var(--green-border); color: var(--green); }
+.alert.error { background: var(--red-light); border: 1px solid var(--red-border); color: var(--red); }
+.alert.show { display: block; }
+
+.list-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.list-count { font-size: 12px; color: var(--light); }
+.refresh-btn { padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; color: var(--mid); background: var(--bg); cursor: pointer; font-family: inherit; }
+.refresh-btn:hover { border-color: var(--red); color: var(--red); }
+
+.inquiry-card { background: var(--bg); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 12px; overflow: hidden; box-shadow: var(--shadow); transition: box-shadow .2s; }
+.inquiry-card:hover { box-shadow: var(--shadow-hover); }
+.card-head { padding: 16px 18px; cursor: pointer; display: flex; align-items: flex-start; gap: 12px; }
+.card-head-info { flex: 1; min-width: 0; }
+.card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+.cat-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; background: var(--red-light); color: var(--red); border: 1px solid var(--red-border); }
+.status-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; }
+.status-badge.pending { background: var(--yellow-light); color: var(--yellow); border: 1px solid var(--yellow-border); }
+.status-badge.answered { background: var(--green-light); color: var(--green); border: 1px solid var(--green-border); }
+.card-meta { font-size: 11px; color: var(--light); }
+.card-preview { font-size: 13px; color: var(--mid); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-chevron { font-size: 12px; color: var(--light); flex-shrink: 0; transition: transform .2s; padding-top: 2px; }
+.card-open .card-chevron { transform: rotate(180deg); }
+
+.card-body { display: none; border-top: 1px solid var(--border); padding: 16px 18px; }
+.card-open .card-body { display: block; }
+.body-section { margin-bottom: 14px; }
+.body-label { font-size: 11px; font-weight: 700; color: var(--light); letter-spacing: .04em; text-transform: uppercase; margin-bottom: 6px; }
+.body-text { font-size: 13px; color: var(--dark); line-height: 1.7; white-space: pre-wrap; }
+.reply-box { background: var(--green-light); border: 1px solid var(--green-border); border-radius: 10px; padding: 14px 16px; }
+.reply-box .body-label { color: var(--green); }
+.reply-date { font-size: 11px; color: var(--light); margin-top: 6px; }
+
+.loading { text-align: center; padding: 48px 20px; color: var(--light); font-size: 14px; }
+.empty { text-align: center; padding: 48px 20px; }
+.empty-icon { font-size: 40px; margin-bottom: 12px; }
+.empty-text { font-size: 14px; color: var(--light); }
+
+footer { text-align: center; padding: 24px 20px; font-size: 11px; color: var(--light); border-top: 1px solid var(--border); background: var(--bg); margin-top: 40px; }
+
+@media (max-width: 480px) {
+  .form-row { grid-template-columns: 1fr; }
+  .content { padding: 16px 14px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <span class="logo-text">kt <span>skylife</span></span>
+    <span class="header-badge">대리점 전용</span>
+    <span class="header-title">문의 게시판</span>
+  </div>
+</header>
+
+<div class="tab-bar">
+  <div class="tab-inner">
+    <button class="tab-btn active" id="tab-write" onclick="switchTab('write')">문의하기</button>
+    <button class="tab-btn" id="tab-list" onclick="switchTab('list')">문의내역</button>
+  </div>
+</div>
+
+<div class="content" id="pane-write">
+  <div class="alert success" id="alert-success"></div>
+  <div class="alert error" id="alert-error"></div>
+  <div class="form-card">
+    <h2>문의 작성</h2>
+    <p class="form-desc">궁금한 사항을 남겨주시면 관리자가 확인 후 답변드립니다.</p>
+    <div class="form-row">
+      <div class="form-group">
+        <label>이름 <span class="req">*</span></label>
+        <input type="text" id="f-name" placeholder="홍길동">
+      </div>
+      <div class="form-group">
+        <label>소속 대리점 <span class="req">*</span></label>
+        <input type="text" id="f-dept" placeholder="○○ 대리점">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>문의 유형 <span class="req">*</span></label>
+        <select id="f-cat">
+          <option value="">선택하세요</option>
+          <option>개통 문의</option>
+          <option>정책 문의</option>
+          <option>수수료 문의</option>
+          <option>단말기/유심</option>
+          <option>기타</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>연락처 <span class="opt">(선택)</span></label>
+        <input type="text" id="f-contact" placeholder="010-0000-0000">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>문의 내용 <span class="req">*</span></label>
+      <textarea id="f-content" placeholder="문의 내용을 자세히 작성해주세요."></textarea>
+    </div>
+    <button class="submit-btn" id="submit-btn" onclick="submitInquiry()">문의 접수</button>
+  </div>
+</div>
+
+<div class="content" id="pane-list" style="display:none">
+  <div class="list-header">
+    <span class="list-count" id="list-count"></span>
+    <button class="refresh-btn" onclick="loadList()">↺ 새로고침</button>
+  </div>
+  <div id="list-container"></div>
+</div>
+
+<footer>Created by 박정진 &nbsp;|&nbsp; 스카이라이프 모바일 문의 게시판</footer>
+
+<script>
+const SUPABASE_URL = 'https://zeiygknvggokauetgrzk.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InplaXlna252Z2dva2F1ZXRncnprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjE4NzgsImV4cCI6MjA5MDczNzg3OH0.hTipybUz3nfgy_J2sSonwU8FOtM8Tvh4idsvPNx2OF4';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function switchTab(tab) {
+  document.getElementById('pane-write').style.display = tab === 'write' ? 'block' : 'none';
+  document.getElementById('pane-list').style.display  = tab === 'list'  ? 'block' : 'none';
+  document.getElementById('tab-write').classList.toggle('active', tab === 'write');
+  document.getElementById('tab-list').classList.toggle('active',  tab === 'list');
+  if (tab === 'list') loadList();
+}
+
+async function submitInquiry() {
+  const name    = document.getElementById('f-name').value.trim();
+  const dept    = document.getElementById('f-dept').value.trim();
+  const cat     = document.getElementById('f-cat').value;
+  const contact = document.getElementById('f-contact').value.trim();
+  const content = document.getElementById('f-content').value.trim();
+
+  if (!name || !dept || !cat || !content) {
+    showAlert('error', '이름, 소속, 문의 유형, 내용은 필수 입력 항목입니다.'); return;
+  }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = '접수 중...';
+
+  const { error } = await sb.from('inquiries').insert({ name, department: dept, category: cat, contact, content });
+
+  btn.disabled = false; btn.textContent = '문의 접수';
+
+  if (error) { showAlert('error', '오류가 발생했습니다. 다시 시도해주세요.'); return; }
+
+  showAlert('success', '✅ 문의가 접수되었습니다. 관리자가 확인 후 답변드립니다.');
+  ['f-name','f-dept','f-contact','f-content'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-cat').value = '';
+}
+
+function showAlert(type, msg) {
+  ['success','error'].forEach(t => { const el = document.getElementById('alert-'+t); el.classList.remove('show'); el.textContent=''; });
+  const el = document.getElementById('alert-'+type);
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 5000);
+}
+
+async function loadList() {
+  const container = document.getElementById('list-container');
+  setLoading(container, '불러오는 중...');
+
+  const { data, error } = await sb.from('inquiries').select('*').order('created_at', { ascending: false });
+
+  if (error) { setLoading(container, '불러오기 실패. 새로고침을 눌러주세요.'); return; }
+
+  document.getElementById('list-count').textContent = '전체 ' + data.length + '건';
+
+  if (!data.length) {
+    container.textContent = '';
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.innerHTML = DOMPurify.sanitize('<div class="empty-icon">📭</div><div class="empty-text">아직 문의 내역이 없습니다.</div>');
+    container.appendChild(empty);
+    return;
+  }
+
+  container.textContent = '';
+  data.forEach(d => container.appendChild(buildCard(d)));
+}
+
+function buildCard(d) {
+  const card = document.createElement('div');
+  card.className = 'inquiry-card';
+  card.id = 'card-' + d.id;
+
+  const date = new Date(d.created_at).toLocaleDateString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+
+  const head = document.createElement('div');
+  head.className = 'card-head';
+  head.onclick = () => card.classList.toggle('card-open');
+
+  const info = document.createElement('div');
+  info.className = 'card-head-info';
+
+  const top = document.createElement('div');
+  top.className = 'card-top';
+  const catBadge = document.createElement('span');
+  catBadge.className = 'cat-badge';
+  catBadge.textContent = d.category;
+  const statusBadge = document.createElement('span');
+  statusBadge.className = 'status-badge ' + (d.status === 'answered' ? 'answered' : 'pending');
+  statusBadge.textContent = d.status === 'answered' ? '답변완료' : '답변대기';
+  top.appendChild(catBadge);
+  top.appendChild(statusBadge);
+
+  const meta = document.createElement('div');
+  meta.className = 'card-meta';
+  meta.textContent = d.name + ' · ' + d.department + ' · ' + date;
+
+  const preview = document.createElement('div');
+  preview.className = 'card-preview';
+  preview.textContent = d.content;
+
+  info.appendChild(top);
+  info.appendChild(meta);
+  info.appendChild(preview);
+
+  const chevron = document.createElement('span');
+  chevron.className = 'card-chevron';
+  chevron.textContent = '▼';
+
+  head.appendChild(info);
+  head.appendChild(chevron);
+
+  const body = document.createElement('div');
+  body.className = 'card-body';
+
+  const contentSection = createBodySection('문의 내용', d.content);
+  body.appendChild(contentSection);
+
+  if (d.contact) body.appendChild(createBodySection('연락처', d.contact));
+
+  if (d.status === 'answered' && d.reply) {
+    const replySection = document.createElement('div');
+    replySection.className = 'body-section';
+    const replyBox = document.createElement('div');
+    replyBox.className = 'reply-box';
+    const replyLabel = document.createElement('div');
+    replyLabel.className = 'body-label';
+    replyLabel.textContent = '관리자 답변';
+    const replyText = document.createElement('div');
+    replyText.className = 'body-text';
+    replyText.textContent = d.reply;
+    replyBox.appendChild(replyLabel);
+    replyBox.appendChild(replyText);
+    if (d.replied_at) {
+      const replyDate = document.createElement('div');
+      replyDate.className = 'reply-date';
+      replyDate.textContent = new Date(d.replied_at).toLocaleDateString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+      replyBox.appendChild(replyDate);
+    }
+    replySection.appendChild(replyBox);
+    body.appendChild(replySection);
+  }
+
+  card.appendChild(head);
+  card.appendChild(body);
+  return card;
+}
+
+function createBodySection(label, text) {
+  const section = document.createElement('div');
+  section.className = 'body-section';
+  const lbl = document.createElement('div');
+  lbl.className = 'body-label';
+  lbl.textContent = label;
+  const txt = document.createElement('div');
+  txt.className = 'body-text';
+  txt.textContent = text;
+  section.appendChild(lbl);
+  section.appendChild(txt);
+  return section;
+}
+
+function setLoading(container, msg) {
+  container.textContent = '';
+  const el = document.createElement('div');
+  el.className = 'loading';
+  el.textContent = msg;
+  container.appendChild(el);
+}
+</script>
+</body>
+</html>

@@ -44,8 +44,10 @@ header { background: var(--bg); border-top: 3px solid var(--red); border-bottom:
 .col-title { text-align: left; }
 .col-view { width: 76px; }
 .cat-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; background: var(--red-light); color: var(--red); border: 1px solid var(--red-border); white-space: nowrap; }
-.title-link { color: var(--black); font-weight: 500; cursor: pointer; }
+.title-wrap { display: flex; align-items: baseline; gap: 8px; text-align: left; }
+.title-link { color: var(--black); font-weight: 700; cursor: pointer; white-space: nowrap; text-align: left; }
 .title-link:hover { color: var(--red); text-decoration: underline; }
+.content-preview { font-size: 12px; color: var(--light); font-weight: 400; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 
 /* 상세 화면 */
 #pane-detail { display: none; }
@@ -74,7 +76,7 @@ footer { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border
 <header>
   <div class="header-inner">
     <span class="logo-text">kt <span>skylife</span></span>
-    <span class="header-badge">대리점 전용</span>
+    <span class="header-badge">MOBILE</span>
     <span class="header-title">공지사항</span>
     <span class="header-count" id="count-label"></span>
   </div>
@@ -171,11 +173,18 @@ function buildRow(d, seq) {
 
   const titleTd = document.createElement('td');
   titleTd.className = 'col-title';
+  const titleWrap = document.createElement('div');
+  titleWrap.className = 'title-wrap';
   const titleLink = document.createElement('span');
   titleLink.className = 'title-link';
   titleLink.textContent = d.title;
   titleLink.onclick = () => openDetail(d.id);
-  titleTd.appendChild(titleLink);
+  const preview = document.createElement('span');
+  preview.className = 'content-preview';
+  preview.textContent = truncateContent(d.content, 20);
+  titleWrap.appendChild(titleLink);
+  titleWrap.appendChild(preview);
+  titleTd.appendChild(titleWrap);
 
   const viewTd = document.createElement('td');
   viewTd.className = 'col-view';
@@ -238,6 +247,12 @@ function renderDetail(d) {
   container.appendChild(title);
   container.appendChild(meta);
   container.appendChild(content);
+}
+
+function truncateContent(text, len) {
+  if (!text) return '';
+  const trimmed = text.trim().replace(/\s+/g, ' ');
+  return trimmed.length > len ? trimmed.slice(0, len) + '…' : trimmed;
 }
 
 function setLoading(container, msg) {

@@ -84,6 +84,10 @@ textarea { resize: vertical; min-height: 140px; line-height: 1.6; }
 .refresh-btn { padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; color: var(--mid); background: var(--bg); cursor: pointer; font-family: inherit; }
 .refresh-btn:hover { border-color: var(--red); color: var(--red); }
 
+/* 회원 검색 */
+.account-search-bar { margin-bottom: 12px; }
+.account-search-bar input { max-width: 320px; }
+
 /* 필터 탭 */
 .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
 .filter-btn { padding: 7px 16px; border: 1px solid var(--border); border-radius: 20px; font-size: 13px; font-weight: 500; color: var(--mid); background: var(--bg); cursor: pointer; font-family: inherit; transition: all .2s; }
@@ -222,6 +226,9 @@ footer { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border
   </div>
 
   <div id="tab-accounts" class="main-tab-content">
+    <div class="account-search-bar">
+      <input type="text" id="account-search" placeholder="계정(이메일) 또는 이름 검색" oninput="setAccountSearch(this.value)">
+    </div>
     <div class="filter-bar">
       <button class="filter-btn active" data-afilter="all" onclick="setAccountFilter('all')">전체</button>
       <button class="filter-btn" data-afilter="pending" onclick="setAccountFilter('pending')">승인 대기</button>
@@ -248,6 +255,7 @@ let editingId = null;
 let allAccounts = [];
 let accountsLoaded = false;
 let accountFilter = 'all';
+let accountSearchQuery = '';
 
 /* ── 인증 ── */
 function togglePw() {
@@ -499,8 +507,19 @@ function setAccountFilter(f) {
   renderAccounts();
 }
 
+function setAccountSearch(q) {
+  accountSearchQuery = q.trim().toLowerCase();
+  renderAccounts();
+}
+
 function renderAccounts() {
-  const filtered = accountFilter === 'all' ? allAccounts : allAccounts.filter(a => a.status === accountFilter);
+  let filtered = accountFilter === 'all' ? allAccounts : allAccounts.filter(a => a.status === accountFilter);
+  if (accountSearchQuery) {
+    filtered = filtered.filter(a =>
+      (a.name || '').toLowerCase().includes(accountSearchQuery) ||
+      (a.email || '').toLowerCase().includes(accountSearchQuery)
+    );
+  }
   const container = document.getElementById('accounts-list-container');
   container.textContent = '';
 

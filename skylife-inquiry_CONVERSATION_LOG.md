@@ -199,3 +199,10 @@ inquiries
 
 ### 4. 미실행 — Supabase에 schema_notices.sql 재적용 필요
 - 위 변경사항이 실제 반영되려면 Supabase SQL Editor에서 갱신된 `schema_notices.sql` 전체를 다시 실행해야 함 (컬럼 추가 + 제약조건 교체가 아직 DB에 반영 안 된 상태)
+
+---
+
+## 2026-07-20 업데이트 — 헤더 배지 통일 (MOBILE)
+- 현장영업 안내 가이드(skylife-guide)에서 연결되는 아웃링크 페이지들의 헤더를 "kt skylife" + "MOBILE" 배지로 통일하는 작업의 일환
+- 헤더 배지 "대리점 전용" → "MOBILE" 로 변경 (제목 문구 `공지사항`은 그대로 유지)
+- `git push` + `npx vercel deploy --prod` → https://skylife-inquiry.vercel.app 반영 확인

@@ -54,7 +54,7 @@ begin
   end if;
 
   return query
-    select p.id, p.name, p.agency_name, p.agency_code, p.status, p.created_at, u.email
+    select p.id, p.name, p.agency_name, p.agency_code, p.status, p.created_at, u.email::text
     from public.profiles p
     join auth.users u on u.id = p.id
     order by p.created_at desc;

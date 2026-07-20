@@ -26,7 +26,9 @@ header { background: var(--bg); border-top: 3px solid var(--red); border-bottom:
 
 .content { max-width: 1080px; margin: 0 auto; padding: 24px 20px; }
 
-.list-header { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 16px; }
+.list-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.search-input { flex: 1; min-width: 160px; max-width: 260px; padding: 7px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: inherit; color: var(--black); background: var(--bg); outline: none; }
+.search-input:focus { border-color: var(--red); }
 .refresh-btn { padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; color: var(--mid); background: var(--bg); cursor: pointer; font-family: inherit; }
 .refresh-btn:hover { border-color: var(--red); color: var(--red); }
 
@@ -86,6 +88,7 @@ footer { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border
 
 <div class="content" id="pane-list">
   <div class="list-header">
+    <input type="text" id="notice-search" class="search-input" placeholder="제목 또는 내용 검색" oninput="filterNotices(this.value)">
     <button class="refresh-btn" onclick="loadList()">↺ 새로고침</button>
   </div>
   <div class="table-wrap">
@@ -118,6 +121,7 @@ const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let allNotices = [];
+let noticeSearchQuery = '';
 
 function showList() {
   document.getElementById('pane-detail').style.display = 'none';
@@ -136,16 +140,31 @@ async function loadList() {
 
   allNotices = data;
   document.getElementById('count-label').textContent = '전체 ' + data.length + '건';
+  renderList();
+}
 
+function filterNotices(q) {
+  noticeSearchQuery = q.trim().toLowerCase();
+  renderList();
+}
+
+function renderList() {
+  const container = document.getElementById('list-container');
   container.textContent = '';
 
-  if (!data.length) {
+  const filtered = noticeSearchQuery
+    ? allNotices.filter(d =>
+        (d.title || '').toLowerCase().includes(noticeSearchQuery) ||
+        (d.content || '').toLowerCase().includes(noticeSearchQuery))
+    : allNotices;
+
+  if (!filtered.length) {
     const tr = document.createElement('tr');
     const td = document.createElement('td');
     td.colSpan = 5;
     td.className = 'empty';
-    const icon = document.createElement('div'); icon.className = 'empty-icon'; icon.textContent = '📭';
-    const text = document.createElement('div'); text.className = 'empty-text'; text.textContent = '등록된 공지가 없습니다.';
+    const icon = document.createElement('div'); icon.className = 'empty-icon'; icon.textContent = allNotices.length ? '🔍' : '📭';
+    const text = document.createElement('div'); text.className = 'empty-text'; text.textContent = allNotices.length ? '검색 결과가 없습니다.' : '등록된 공지가 없습니다.';
     td.appendChild(icon); td.appendChild(text);
     tr.appendChild(td);
     container.appendChild(tr);
@@ -153,7 +172,7 @@ async function loadList() {
   }
 
   let seq = 0;
-  data.forEach(d => {
+  filtered.forEach(d => {
     if (!d.pinned) seq++;
     container.appendChild(buildRow(d, seq));
   });

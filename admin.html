@@ -6,7 +6,6 @@
 <title>kt skylife 관리자</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js" integrity="sha384-eEu5CTj3qGvu9PdJuS+YlkNi7d2XxQROAFYOr59zgObtlcux1ae1Il3u7jvdCSWu" crossorigin="anonymous"></script>
 <style>
 :root {
   --red: #E60012; --red2: #CC0010; --red-light: #FFF5F5; --red-border: #FFCCCC;
@@ -38,7 +37,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg2); color: v
 
 /* 헤더 */
 header { background: var(--bg); border-top: 3px solid var(--red); border-bottom: 1px solid var(--border); padding: 0 20px; position: sticky; top: 0; z-index: 200; box-shadow: var(--shadow); }
-.header-inner { max-width: 1290px; margin: 0 auto; display: flex; align-items: center; height: 56px; gap: 12px; }
+.header-inner { max-width: 860px; margin: 0 auto; display: flex; align-items: center; height: 56px; gap: 12px; }
 .logo-text { font-size: 18px; font-weight: 900; color: var(--black); }
 .logo-text span { color: var(--red); }
 .header-badge { background: var(--red); color: #fff; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 3px; }
@@ -47,7 +46,7 @@ header { background: var(--bg); border-top: 3px solid var(--red); border-bottom:
 .logout-btn:hover { border-color: var(--red); color: var(--red); }
 
 /* 본문 */
-.content { max-width: 1290px; margin: 0 auto; padding: 24px 20px; }
+.content { max-width: 860px; margin: 0 auto; padding: 24px 20px; }
 
 /* 메인 탭 (공지사항 관리 / 회원 승인) */
 .main-tab-bar { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
@@ -84,9 +83,9 @@ textarea { resize: vertical; min-height: 140px; line-height: 1.6; }
 .refresh-btn { padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; color: var(--mid); background: var(--bg); cursor: pointer; font-family: inherit; }
 .refresh-btn:hover { border-color: var(--red); color: var(--red); }
 
-/* 회원 검색 */
-.account-search-bar { margin-bottom: 12px; }
-.account-search-bar input { max-width: 320px; }
+/* 검색 (공지 검색 / 회원 검색 공용) */
+.search-bar { margin-bottom: 12px; }
+.search-bar input { max-width: 320px; }
 
 /* 필터 탭 */
 .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
@@ -218,6 +217,9 @@ footer { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border
       <div class="form-feedback" id="form-feedback"></div>
     </div>
 
+    <div class="search-bar">
+      <input type="text" id="notice-search" placeholder="제목 또는 내용 검색" oninput="setNoticeSearch(this.value)">
+    </div>
     <div class="list-header">
       <span class="list-count" id="notice-count"></span>
       <button class="refresh-btn" onclick="loadNotices()">↺ 새로고침</button>
@@ -226,7 +228,7 @@ footer { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border
   </div>
 
   <div id="tab-accounts" class="main-tab-content">
-    <div class="account-search-bar">
+    <div class="search-bar">
       <input type="text" id="account-search" placeholder="계정(이메일) 또는 이름 검색" oninput="setAccountSearch(this.value)">
     </div>
     <div class="filter-bar">
@@ -251,6 +253,7 @@ const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let allNotices = [];
+let noticeSearchQuery = '';
 let editingId = null;
 let allAccounts = [];
 let accountsLoaded = false;
@@ -401,18 +404,31 @@ async function loadNotices() {
   renderNoticeList();
 }
 
+function setNoticeSearch(q) {
+  noticeSearchQuery = q.trim().toLowerCase();
+  renderNoticeList();
+}
+
 function renderNoticeList() {
   const container = document.getElementById('notice-list-container');
   container.textContent = '';
 
-  if (!allNotices.length) {
+  const filtered = noticeSearchQuery
+    ? allNotices.filter(d =>
+        (d.title || '').toLowerCase().includes(noticeSearchQuery) ||
+        (d.content || '').toLowerCase().includes(noticeSearchQuery))
+    : allNotices;
+
+  if (!filtered.length) {
     const empty = document.createElement('div');
     empty.className = 'empty';
-    empty.innerHTML = DOMPurify.sanitize('<div class="empty-icon">📭</div><div class="empty-text">등록된 공지가 없습니다.</div>');
+    const icon = document.createElement('div'); icon.className = 'empty-icon'; icon.textContent = allNotices.length ? '🔍' : '📭';
+    const text = document.createElement('div'); text.className = 'empty-text'; text.textContent = allNotices.length ? '검색 결과가 없습니다.' : '등록된 공지가 없습니다.';
+    empty.appendChild(icon); empty.appendChild(text);
     container.appendChild(empty);
     return;
   }
-  allNotices.forEach(d => container.appendChild(buildNoticeCard(d)));
+  filtered.forEach(d => container.appendChild(buildNoticeCard(d)));
 }
 
 function buildNoticeCard(d) {

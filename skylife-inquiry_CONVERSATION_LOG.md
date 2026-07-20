@@ -238,3 +238,17 @@ inquiries
 
 ### 4. 정리
 - index.html/admin.html에서 더 이상 쓰이지 않게 된 DOMPurify 스크립트 태그 제거 (목록 렌더링을 DOM API 기반으로 전환하면서 innerHTML 사용처가 없어짐)
+
+---
+
+## 2026-07-21 업데이트 — 일반 사용자 목록에 등록일 컬럼 추가
+
+### 1. index.html — 목록 표에 "등록일" 컬럼 신설
+- 기존 목록 표는 상세보기에만 등록일이 노출되고, 표 자체에는 등록일 컬럼이 없었음
+- `col-date` 컬럼(너비 84px) 추가, `YY.MM.DD` 형식(`toLocaleDateString('ko-KR', { year:'2-digit', month:'2-digit', day:'2-digit' })`)으로 표시
+- 최초에는 "내용"과 "조회수" 사이에 추가했다가, 사용자 요청으로 **No 바로 다음 위치**로 이동 (No / 등록일 / 분류 / 제목 / 내용 / 조회수 순)
+- empty/loading 상태 표시용 `colSpan`도 5 → 6으로 함께 수정
+
+### 2. 배포
+- 커밋 `555317a` — 공지사항 목록에 등록일 컬럼 추가 (No 다음 위치)
+- `git push` + `npx vercel deploy --prod` → https://skylife-inquiry.vercel.app 반영 완료

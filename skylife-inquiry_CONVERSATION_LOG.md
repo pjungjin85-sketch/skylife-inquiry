@@ -206,3 +206,11 @@ inquiries
 - 현장영업 안내 가이드(skylife-guide)에서 연결되는 아웃링크 페이지들의 헤더를 "kt skylife" + "MOBILE" 배지로 통일하는 작업의 일환
 - 헤더 배지 "대리점 전용" → "MOBILE" 로 변경 (제목 문구 `공지사항`은 그대로 유지)
 - `git push` + `npx vercel deploy --prod` → https://skylife-inquiry.vercel.app 반영 확인
+
+---
+
+## 2026-07-20 업데이트 — favicon 통일 (워크스페이스 6개 사이트 공용)
+- 브라우저 탭에서 skylife-guide/TPS는 kt skylife 로고 favicon이 보이는데, 나머지 6개 사이트(skylife-plans, skylife-addons, skylife-commission-calculator, skylife-mobile-faq, mobile-manual, skylife-inquiry)는 favicon 링크 태그 자체가 없어 브라우저 기본(Vercel "V") 아이콘이 노출되던 문제
+- skylife-guide/TPS에 있던 동일한 `<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,...">` (kt skylife 빨간 로고 SVG)를 6개 파일 `<title>` 다음 줄에 그대로 추가
+- 커밋: `42e93e8` — kt skylife 로고 favicon 추가 (skylife-inquiry)
+- `git push` + `npx vercel deploy --prod` → https://skylife-inquiry.vercel.app 반영 확인 완료

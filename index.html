@@ -35,6 +35,8 @@ header { background: var(--bg); border-top: 3px solid var(--red); border-bottom:
 .notice-table { width: 100%; border-collapse: collapse; min-width: 480px; }
 .notice-table th { background: var(--bg3); font-size: 12px; font-weight: 700; color: var(--mid); padding: 12px 10px; border-bottom: 1px solid var(--border); text-align: center; white-space: nowrap; }
 .notice-table td { padding: 13px 10px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--dark); text-align: center; }
+.notice-table th, .notice-table td { border-right: 1px solid var(--border); }
+.notice-table th:last-child, .notice-table td:last-child { border-right: none; }
 .notice-table tbody tr:last-child td { border-bottom: none; }
 .notice-table tbody tr:hover td { background: var(--bg3); }
 .notice-table tr.pinned-row td { background: var(--red-light); }
@@ -42,12 +44,12 @@ header { background: var(--bg); border-top: 3px solid var(--red); border-bottom:
 .col-no { width: 56px; }
 .col-cat { width: 88px; }
 .col-title { text-align: left; }
+.col-content { text-align: left; }
 .col-view { width: 76px; }
 .cat-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; background: var(--red-light); color: var(--red); border: 1px solid var(--red-border); white-space: nowrap; }
-.title-wrap { display: flex; align-items: baseline; gap: 8px; text-align: left; }
 .title-link { color: var(--black); font-weight: 700; cursor: pointer; white-space: nowrap; text-align: left; }
 .title-link:hover { color: var(--red); text-decoration: underline; }
-.content-preview { font-size: 12px; color: var(--light); font-weight: 400; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.content-preview { display: block; font-size: 12px; color: var(--light); font-weight: 400; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* 상세 화면 */
 #pane-detail { display: none; }
@@ -140,7 +142,7 @@ async function loadList() {
   if (!data.length) {
     const tr = document.createElement('tr');
     const td = document.createElement('td');
-    td.colSpan = 4;
+    td.colSpan = 5;
     td.className = 'empty';
     const icon = document.createElement('div'); icon.className = 'empty-icon'; icon.textContent = '📭';
     const text = document.createElement('div'); text.className = 'empty-text'; text.textContent = '등록된 공지가 없습니다.';
@@ -174,18 +176,18 @@ function buildRow(d, seq) {
 
   const titleTd = document.createElement('td');
   titleTd.className = 'col-title';
-  const titleWrap = document.createElement('div');
-  titleWrap.className = 'title-wrap';
   const titleLink = document.createElement('span');
   titleLink.className = 'title-link';
   titleLink.textContent = d.title;
   titleLink.onclick = () => openDetail(d.id);
+  titleTd.appendChild(titleLink);
+
+  const contentTd = document.createElement('td');
+  contentTd.className = 'col-content';
   const preview = document.createElement('span');
   preview.className = 'content-preview';
   preview.textContent = truncateContent(d.content, 20);
-  titleWrap.appendChild(titleLink);
-  titleWrap.appendChild(preview);
-  titleTd.appendChild(titleWrap);
+  contentTd.appendChild(preview);
 
   const viewTd = document.createElement('td');
   viewTd.className = 'col-view';
@@ -194,6 +196,7 @@ function buildRow(d, seq) {
   tr.appendChild(noTd);
   tr.appendChild(catTd);
   tr.appendChild(titleTd);
+  tr.appendChild(contentTd);
   tr.appendChild(viewTd);
   return tr;
 }
@@ -260,7 +263,7 @@ function setLoading(container, msg) {
   container.textContent = '';
   const tr = document.createElement('tr');
   const td = document.createElement('td');
-  td.colSpan = 4;
+  td.colSpan = 5;
   td.className = 'loading';
   td.textContent = msg;
   tr.appendChild(td);

@@ -35,12 +35,28 @@ $$;
 create table if not exists public.notices (
   id uuid primary key default gen_random_uuid(),
   title text not null,
-  category text not null default '공지' check (category in ('공지','필독','이벤트','기타')),
+  category text not null default '기타' check (category in ('긴급','정책','규제','상품','기타')),
   content text not null,
   view_count integer not null default 0,
+  pinned boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz
 );
+
+-- 1-1. 마이그레이션 (테이블이 이미 있던 경우에도 안전하게 재실행 가능)
+--      분류 체계를 공지/필독/이벤트/기타 → 긴급/정책/규제/상품/기타 로 교체하고 pinned 컬럼 추가
+alter table public.notices add column if not exists pinned boolean not null default false;
+
+-- 기존 분류값은 새 체계와 매핑이 애매하므로(예: '필독'이 '긴급'인지 '정책'인지 판단 불가)
+-- 일단 전부 '기타'로 내려두고, 관리자가 admin.html에서 실제 성격에 맞게 재분류할 것을 권장
+update public.notices set category = '기타'
+  where category not in ('긴급','정책','규제','상품','기타');
+
+alter table public.notices drop constraint if exists notices_category_check;
+alter table public.notices add constraint notices_category_check
+  check (category in ('긴급','정책','규제','상품','기타'));
+
+alter table public.notices alter column category set default '기타';
 
 alter table public.notices enable row level security;
 

@@ -74,6 +74,9 @@ textarea { resize: vertical; min-height: 140px; line-height: 1.6; }
 .form-feedback { font-size: 12px; margin-top: 8px; min-height: 16px; }
 .form-feedback.ok { color: var(--green); }
 .form-feedback.fail { color: var(--red); }
+.checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--dark); cursor: pointer; }
+.checkbox-label input[type="checkbox"] { width: auto; accent-color: var(--red); cursor: pointer; }
+.pin-badge { font-size: 11px; font-weight: 700; color: var(--red); }
 
 /* 목록 헤더 */
 .list-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
@@ -88,6 +91,7 @@ textarea { resize: vertical; min-height: 140px; line-height: 1.6; }
 
 /* 공지 카드 */
 .notice-card { background: var(--bg); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 12px; overflow: hidden; box-shadow: var(--shadow); }
+.notice-card.pinned .card-head { background: var(--red-light); }
 .card-head { padding: 16px 18px; cursor: pointer; display: flex; align-items: flex-start; gap: 12px; }
 .card-head-info { flex: 1; min-width: 0; }
 .card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
@@ -185,16 +189,23 @@ footer { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border
         <div class="form-group">
           <label>분류</label>
           <select id="f-category">
-            <option>공지</option>
-            <option>필독</option>
-            <option>이벤트</option>
-            <option>기타</option>
+            <option>긴급</option>
+            <option>정책</option>
+            <option>규제</option>
+            <option>상품</option>
+            <option selected>기타</option>
           </select>
         </div>
       </div>
       <div class="form-group">
         <label>내용</label>
         <textarea id="f-content" placeholder="공지 내용을 입력해주세요."></textarea>
+      </div>
+      <div class="form-group form-group-checkbox">
+        <label class="checkbox-label">
+          <input type="checkbox" id="f-pinned">
+          <span>상단 고정 (게시판 맨 위에 계속 고정 노출)</span>
+        </label>
       </div>
       <div class="form-actions">
         <button class="btn-ghost" id="cancel-edit-btn" onclick="cancelEdit()" style="display:none">취소</button>
@@ -311,6 +322,7 @@ async function submitNotice() {
   const title = document.getElementById('f-title').value.trim();
   const category = document.getElementById('f-category').value;
   const content = document.getElementById('f-content').value.trim();
+  const pinned = document.getElementById('f-pinned').checked;
 
   if (!title || !content) { showFormFeedback('fail', '제목과 내용은 필수 입력 항목입니다.'); return; }
 
@@ -319,9 +331,9 @@ async function submitNotice() {
 
   let error;
   if (editingId) {
-    ({ error } = await sb.from('notices').update({ title, category, content, updated_at: new Date().toISOString() }).eq('id', editingId));
+    ({ error } = await sb.from('notices').update({ title, category, content, pinned, updated_at: new Date().toISOString() }).eq('id', editingId));
   } else {
-    ({ error } = await sb.from('notices').insert({ title, category, content }));
+    ({ error } = await sb.from('notices').insert({ title, category, content, pinned }));
   }
 
   btn.disabled = false;
@@ -339,6 +351,7 @@ function startEdit(d) {
   document.getElementById('f-title').value = d.title;
   document.getElementById('f-category').value = d.category;
   document.getElementById('f-content').value = d.content;
+  document.getElementById('f-pinned').checked = !!d.pinned;
   document.getElementById('submit-btn').textContent = '수정 저장';
   document.getElementById('cancel-edit-btn').style.display = 'inline-block';
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -348,8 +361,9 @@ function cancelEdit() {
   editingId = null;
   document.getElementById('form-title').textContent = '공지 작성';
   document.getElementById('f-title').value = '';
-  document.getElementById('f-category').value = '공지';
+  document.getElementById('f-category').value = '기타';
   document.getElementById('f-content').value = '';
+  document.getElementById('f-pinned').checked = false;
   document.getElementById('submit-btn').textContent = '등록';
   document.getElementById('cancel-edit-btn').style.display = 'none';
 }
@@ -370,7 +384,9 @@ function showFormFeedback(type, msg) {
 
 async function loadNotices() {
   setNoticeLoading('불러오는 중...');
-  const { data, error } = await sb.from('notices').select('*').order('created_at', { ascending: false });
+  const { data, error } = await sb.from('notices').select('*')
+    .order('pinned', { ascending: false })
+    .order('created_at', { ascending: false });
   if (error) { setNoticeLoading('불러오기 실패. 새로고침해주세요.'); return; }
   allNotices = data;
   document.getElementById('notice-count').textContent = '전체 ' + data.length + '건';
@@ -393,7 +409,7 @@ function renderNoticeList() {
 
 function buildNoticeCard(d) {
   const card = document.createElement('div');
-  card.className = 'notice-card';
+  card.className = 'notice-card' + (d.pinned ? ' pinned' : '');
   card.id = 'notice-' + d.id;
 
   const date = new Date(d.created_at).toLocaleDateString('ko-KR', { year:'2-digit', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
@@ -414,6 +430,12 @@ function buildNoticeCard(d) {
   viewBadge.className = 'view-badge';
   viewBadge.textContent = '조회 ' + d.view_count;
   top.appendChild(catBadge); top.appendChild(viewBadge);
+  if (d.pinned) {
+    const pinBadge = document.createElement('span');
+    pinBadge.className = 'pin-badge';
+    pinBadge.textContent = '📌 고정';
+    top.appendChild(pinBadge);
+  }
 
   const title = document.createElement('div');
   title.className = 'card-title';

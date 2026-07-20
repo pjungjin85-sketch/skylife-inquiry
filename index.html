@@ -6,7 +6,6 @@
 <title>kt skylife 공지사항</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js" integrity="sha384-eEu5CTj3qGvu9PdJuS+YlkNi7d2XxQROAFYOr59zgObtlcux1ae1Il3u7jvdCSWu" crossorigin="anonymous"></script>
 <style>
 :root {
   --red: #E60012; --red2: #CC0010; --red-light: #FFF5F5; --red-border: #FFCCCC;
@@ -31,13 +30,22 @@ header { background: var(--bg); border-top: 3px solid var(--red); border-bottom:
 .refresh-btn { padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; color: var(--mid); background: var(--bg); cursor: pointer; font-family: inherit; }
 .refresh-btn:hover { border-color: var(--red); color: var(--red); }
 
-/* 목록 화면 */
-.notice-row { background: var(--bg); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 10px; padding: 16px 18px; cursor: pointer; box-shadow: var(--shadow); transition: box-shadow .2s; }
-.notice-row:hover { box-shadow: var(--shadow-hover); }
-.row-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
-.cat-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; background: var(--red-light); color: var(--red); border: 1px solid var(--red-border); }
-.row-title { font-size: 14px; font-weight: 700; color: var(--black); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.row-meta { font-size: 11px; color: var(--light); display: flex; gap: 10px; }
+/* 목록 화면 (표) */
+.table-wrap { overflow-x: auto; background: var(--bg); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); }
+.notice-table { width: 100%; border-collapse: collapse; min-width: 480px; }
+.notice-table th { background: var(--bg3); font-size: 12px; font-weight: 700; color: var(--mid); padding: 12px 10px; border-bottom: 1px solid var(--border); text-align: center; white-space: nowrap; }
+.notice-table td { padding: 13px 10px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--dark); text-align: center; }
+.notice-table tbody tr:last-child td { border-bottom: none; }
+.notice-table tbody tr:hover td { background: var(--bg3); }
+.notice-table tr.pinned-row td { background: var(--red-light); }
+.notice-table tr.pinned-row:hover td { background: var(--red-light); }
+.col-no { width: 56px; }
+.col-cat { width: 88px; }
+.col-title { text-align: left; }
+.col-view { width: 76px; }
+.cat-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; background: var(--red-light); color: var(--red); border: 1px solid var(--red-border); white-space: nowrap; }
+.title-link { color: var(--black); font-weight: 500; cursor: pointer; }
+.title-link:hover { color: var(--red); text-decoration: underline; }
 
 /* 상세 화면 */
 #pane-detail { display: none; }
@@ -76,7 +84,19 @@ footer { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border
   <div class="list-header">
     <button class="refresh-btn" onclick="loadList()">↺ 새로고침</button>
   </div>
-  <div id="list-container"></div>
+  <div class="table-wrap">
+    <table class="notice-table">
+      <thead>
+        <tr>
+          <th class="col-no">No</th>
+          <th class="col-cat">분류</th>
+          <th class="col-title">제목</th>
+          <th class="col-view">조회수</th>
+        </tr>
+      </thead>
+      <tbody id="list-container"></tbody>
+    </table>
+  </div>
 </div>
 
 <div class="content" id="pane-detail">
@@ -103,56 +123,69 @@ async function loadList() {
   const container = document.getElementById('list-container');
   setLoading(container, '불러오는 중...');
 
-  const { data, error } = await sb.from('notices').select('*').order('created_at', { ascending: false });
+  const { data, error } = await sb.from('notices').select('*')
+    .order('pinned', { ascending: false })
+    .order('created_at', { ascending: false });
 
   if (error) { setLoading(container, '불러오기 실패. 새로고침을 눌러주세요.'); return; }
 
   allNotices = data;
   document.getElementById('count-label').textContent = '전체 ' + data.length + '건';
 
+  container.textContent = '';
+
   if (!data.length) {
-    container.textContent = '';
-    const empty = document.createElement('div');
-    empty.className = 'empty';
-    empty.innerHTML = DOMPurify.sanitize('<div class="empty-icon">📭</div><div class="empty-text">등록된 공지가 없습니다.</div>');
-    container.appendChild(empty);
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = 4;
+    td.className = 'empty';
+    const icon = document.createElement('div'); icon.className = 'empty-icon'; icon.textContent = '📭';
+    const text = document.createElement('div'); text.className = 'empty-text'; text.textContent = '등록된 공지가 없습니다.';
+    td.appendChild(icon); td.appendChild(text);
+    tr.appendChild(td);
+    container.appendChild(tr);
     return;
   }
 
-  container.textContent = '';
-  data.forEach(d => container.appendChild(buildRow(d)));
+  let seq = 0;
+  data.forEach(d => {
+    if (!d.pinned) seq++;
+    container.appendChild(buildRow(d, seq));
+  });
 }
 
-function buildRow(d) {
-  const row = document.createElement('div');
-  row.className = 'notice-row';
-  row.onclick = () => openDetail(d.id);
+function buildRow(d, seq) {
+  const tr = document.createElement('tr');
+  if (d.pinned) tr.classList.add('pinned-row');
 
-  const date = new Date(d.created_at).toLocaleDateString('ko-KR', { month:'2-digit', day:'2-digit' });
+  const noTd = document.createElement('td');
+  noTd.className = 'col-no';
+  noTd.textContent = d.pinned ? '📌' : String(seq);
 
-  const top = document.createElement('div');
-  top.className = 'row-top';
+  const catTd = document.createElement('td');
+  catTd.className = 'col-cat';
   const catBadge = document.createElement('span');
   catBadge.className = 'cat-badge';
   catBadge.textContent = d.category;
-  const title = document.createElement('span');
-  title.className = 'row-title';
-  title.textContent = d.title;
-  top.appendChild(catBadge);
-  top.appendChild(title);
+  catTd.appendChild(catBadge);
 
-  const meta = document.createElement('div');
-  meta.className = 'row-meta';
-  const dateSpan = document.createElement('span');
-  dateSpan.textContent = date;
-  const viewSpan = document.createElement('span');
-  viewSpan.textContent = '조회 ' + d.view_count;
-  meta.appendChild(dateSpan);
-  meta.appendChild(viewSpan);
+  const titleTd = document.createElement('td');
+  titleTd.className = 'col-title';
+  const titleLink = document.createElement('span');
+  titleLink.className = 'title-link';
+  titleLink.textContent = d.title;
+  titleLink.onclick = () => openDetail(d.id);
+  titleTd.appendChild(titleLink);
 
-  row.appendChild(top);
-  row.appendChild(meta);
-  return row;
+  const viewTd = document.createElement('td');
+  viewTd.className = 'col-view';
+  viewTd.textContent = d.view_count;
+
+  tr.appendChild(noTd);
+  tr.appendChild(catTd);
+  tr.appendChild(titleTd);
+  tr.appendChild(viewTd);
+  return tr;
 }
 
 async function openDetail(id) {
@@ -209,10 +242,13 @@ function renderDetail(d) {
 
 function setLoading(container, msg) {
   container.textContent = '';
-  const el = document.createElement('div');
-  el.className = 'loading';
-  el.textContent = msg;
-  container.appendChild(el);
+  const tr = document.createElement('tr');
+  const td = document.createElement('td');
+  td.colSpan = 4;
+  td.className = 'loading';
+  td.textContent = msg;
+  tr.appendChild(td);
+  container.appendChild(tr);
 }
 
 loadList();

@@ -150,3 +150,52 @@ inquiries
 - `skylife-guide/index.html`의 `applySsoToLinks()`가 Supabase 액세스 토큰을 URL fragment(`#sso=...`)로 TPS/addons/mobile-faq/plans에 전달
 - 수신 측은 `history.replaceState`로 즉시 URL 제거 + `getUser()`로 서버 검증까지 하고 있어 기본 방어는 있으나, 자동 보안 스캔에서 HIGH로 플래그됨
 - 근본 해결(postMessage 또는 서버 토큰 교환 방식)로 바꿀지, 현재 설계를 유지할지 **사용자 결정 대기 중** (2026-07-16 기준 미결)
+
+---
+
+## 2026-07-20 — 회원 승인 탭 실사용 테스트 중 RPC 버그 2건 발견/수정
+
+### 1. `admin_list_accounts()` — "column reference \"id\" is ambiguous" (42702)
+- 원인: `returns table (id uuid, ...)` 선언 때문에 `id`가 함수 전체 스코프에서 암묵적 변수로 잡혀, 함수 앞부분 관리자 권한 확인 로직(`where id = auth.uid()`)의 `id`가 OUT 파라미터 `id`인지 `profiles.id` 컬럼인지 모호해짐
+- 수정: 해당 서브쿼리에 `profiles pr` 별칭을 주고 `pr.id`, `pr.is_admin`으로 명시적 한정 (`schema_accounts.sql` 갱신)
+
+### 2. `admin_list_accounts()` — "structure of query does not match function result type" (42804)
+- 원인: `returns table`에 `email text`로 선언했는데 실제 `auth.users.email` 컬럼은 `character varying` 타입이라 반환 타입 불일치
+- 수정: `return query`의 `u.email` → `u.email::text`로 명시적 캐스팅
+
+### 3. admin.html 에러 메시지 노출
+- `alert('회원 목록을 불러오지 못했습니다.')` 처럼 원인을 알 수 없는 고정 문구였던 걸, 실제 Supabase 에러 메시지(`error.message`)를 함께 표시하도록 변경 — 위 두 버그를 devtools 네트워크 탭 응답 확인만으로 빠르게 특정할 수 있었음
+- `loadAccounts()`, `setAccountStatus()` 두 곳 모두 적용
+
+### 4. "반려" → "정지" 문구 변경
+- 승인된 계정을 다시 반려 상태로 돌리면 사실상 이용 정지로 동작하는데 문구가 "가입 반려" 느낌이라 변경 요청 받음
+- 필터 버튼("반려됨"→"정지됨"), 상태 뱃지, 반려 버튼 텍스트("반려"→"정지") 전부 수정
+- 사용자에게 보이는 차단 메시지는 skylife-guide/서브페이지 쪽에서 "이용이 제한된 계정입니다"로 통일 (해당 로그는 skylife-guide 참고)
+
+### 5. 회원가입 → 승인 → 로그인 전체 플로우 실사용 검증 완료
+- 신규 계정 회원가입 → 미승인 상태 로그인 차단 확인 → admin.html에서 승인 → 재로그인 성공까지 실제로 테스트 완료
+
+---
+
+## 2026-07-20 (계속) — 공지 목록 UI를 표 형태로 변경 + 분류 체계 개편 + 상단 고정 기능 추가
+
+### 1. index.html — 블록형 목록 → 표(No/분류/제목/조회수) 형태로 전환
+- 기존 `.notice-row` 블록 카드 목록을 `<table>` 기반으로 재작성 (`table-wrap`, `notice-table`)
+- 제목만 클릭 가능한 링크(`title-link`)로 상세보기 진입, 나머지 컬럼은 클릭 불가
+- No 컬럼은 고정글 제외하고 위에서부터 1,2,3... 순번 부여, 고정글은 📌 표시
+- 더 이상 쓰지 않게 된 DOMPurify 스크립트 태그 제거 (목록 렌더링을 전부 DOM API로 전환하면서 innerHTML 사용처가 없어짐)
+
+### 2. 분류 체계 변경: 공지/필독/이벤트/기타 → 긴급/정책/규제/상품/기타
+- `schema_notices.sql`의 `category` check 제약과 기본값(`기타`)을 새 체계로 교체
+- 기존에 이미 배포된 테이블에도 안전하게 재실행 가능하도록 마이그레이션 구문 추가 (`alter table ... drop/add constraint`)
+- 기존 분류값(공지/필독/이벤트/기타)은 새 체계와 1:1 매핑이 애매해서 전부 `기타`로 내려두는 방식 채택 — 관리자가 admin.html에서 실제 성격에 맞게 재분류 필요
+- admin.html의 분류 select 옵션도 동일하게 교체
+
+### 3. 공지 상단 고정 기능 추가
+- `notices` 테이블에 `pinned boolean not null default false` 컬럼 추가
+- admin.html 작성/수정 폼에 "상단 고정" 체크박스 추가, 체크 시 목록 최상단에 고정 노출
+- index.html / admin.html 양쪽 모두 목록 조회 시 `order('pinned', desc).order('created_at', desc)`로 정렬해 고정글이 항상 최상단에 오도록 처리
+- 고정글은 배경색(연한 빨강, `--red-light`)으로 시각적으로 구분
+
+### 4. 미실행 — Supabase에 schema_notices.sql 재적용 필요
+- 위 변경사항이 실제 반영되려면 Supabase SQL Editor에서 갱신된 `schema_notices.sql` 전체를 다시 실행해야 함 (컬럼 추가 + 제약조건 교체가 아직 DB에 반영 안 된 상태)

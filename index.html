@@ -49,6 +49,7 @@ header { background: var(--bg); border-top: 3px solid var(--red); border-bottom:
 .col-title { text-align: left; }
 .col-content { text-align: left; }
 .col-view { width: 76px; }
+.col-date { width: 84px; }
 .cat-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; background: var(--red-light); color: var(--red); border: 1px solid var(--red-border); white-space: nowrap; }
 .title-link { color: var(--black); font-weight: 700; cursor: pointer; white-space: nowrap; text-align: left; }
 .title-link:hover { color: var(--red); text-decoration: underline; }
@@ -97,6 +98,7 @@ footer { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border
       <thead>
         <tr>
           <th class="col-no">No</th>
+          <th class="col-date">등록일</th>
           <th class="col-cat">분류</th>
           <th class="col-title">제목</th>
           <th class="col-content">내용</th>
@@ -162,7 +164,7 @@ function renderList() {
   if (!filtered.length) {
     const tr = document.createElement('tr');
     const td = document.createElement('td');
-    td.colSpan = 5;
+    td.colSpan = 6;
     td.className = 'empty';
     const icon = document.createElement('div'); icon.className = 'empty-icon'; icon.textContent = allNotices.length ? '🔍' : '📭';
     const text = document.createElement('div'); text.className = 'empty-text'; text.textContent = allNotices.length ? '검색 결과가 없습니다.' : '등록된 공지가 없습니다.';
@@ -209,11 +211,16 @@ function buildRow(d, seq) {
   preview.textContent = truncateContent(d.content, 20);
   contentTd.appendChild(preview);
 
+  const dateTd = document.createElement('td');
+  dateTd.className = 'col-date';
+  dateTd.textContent = new Date(d.created_at).toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' });
+
   const viewTd = document.createElement('td');
   viewTd.className = 'col-view';
   viewTd.textContent = d.view_count;
 
   tr.appendChild(noTd);
+  tr.appendChild(dateTd);
   tr.appendChild(catTd);
   tr.appendChild(titleTd);
   tr.appendChild(contentTd);
@@ -283,7 +290,7 @@ function setLoading(container, msg) {
   container.textContent = '';
   const tr = document.createElement('tr');
   const td = document.createElement('td');
-  td.colSpan = 5;
+  td.colSpan = 6;
   td.className = 'loading';
   td.textContent = msg;
   tr.appendChild(td);

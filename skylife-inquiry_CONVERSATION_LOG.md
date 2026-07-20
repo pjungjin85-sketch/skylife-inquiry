@@ -199,6 +199,7 @@ inquiries
 
 ### 4. 미실행 — Supabase에 schema_notices.sql 재적용 필요
 - 위 변경사항이 실제 반영되려면 Supabase SQL Editor에서 갱신된 `schema_notices.sql` 전체를 다시 실행해야 함 (컬럼 추가 + 제약조건 교체가 아직 DB에 반영 안 된 상태)
+- **완료**: 이후 Supabase CLI(`supabase db query --linked -f schema_notices.sql`)로 실제 적용 + 컬럼/제약조건/RLS/RPC 검증까지 완료
 
 ---
 
@@ -214,3 +215,26 @@ inquiries
 - skylife-guide/TPS에 있던 동일한 `<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,...">` (kt skylife 빨간 로고 SVG)를 6개 파일 `<title>` 다음 줄에 그대로 추가
 - 커밋: `42e93e8` — kt skylife 로고 favicon 추가 (skylife-inquiry)
 - `git push` + `npx vercel deploy --prod` → https://skylife-inquiry.vercel.app 반영 확인 완료
+
+---
+
+## 2026-07-20 업데이트 — 목록 제목/내용 표시, 페이지 폭, 검색 기능 (연속 작업)
+
+### 1. 공지 목록 컬럼 구성: No / 분류 / 제목 / 내용(20자 미리보기) / 조회수
+- 블록 카드 목록 → `<table>` 형태로 전환, 헤더-값 컬럼 위치를 정확히 맞춤
+- 제목 옆에 내용 미리보기를 20자로 잘라 별도 "내용" 컬럼에 표시, 제목/내용 모두 왼쪽 정렬
+- 컬럼 사이에 세로 구분선 추가, 표 좌우 바깥쪽 끝은 선 없이 비워둠
+- 고정(pinned) 공지는 상단 고정 + 연한 빨강 배경으로 구분, No 컬럼 대신 📌 표시
+
+### 2. 페이지 폭 조정
+- index.html: 720px → 1080px (요청대로 50% 확대), 현재도 유지 중
+- admin.html: 860px → 1290px로 한 차례 확대했다가, "공지 등록 화면이 너무 꽉 차 보인다"는 피드백으로 860px 원복 (index.html은 그대로 1080px 유지)
+
+### 3. 검색 기능 추가
+- index.html(일반 사용자): 목록 상단에 제목/내용 부분일치 검색창 추가 (`filterNotices`)
+- admin.html(공지사항 관리 탭): 동일한 제목/내용 검색창 추가 (`setNoticeSearch`)
+- admin.html(회원 승인 탭): 계정(이메일)/이름 부분일치 검색창 추가 (`setAccountSearch`) — 상태 필터와 함께 동작
+- 두 화면의 검색창 스타일을 `.search-bar` 클래스로 공용화
+
+### 4. 정리
+- index.html/admin.html에서 더 이상 쓰이지 않게 된 DOMPurify 스크립트 태그 제거 (목록 렌더링을 DOM API 기반으로 전환하면서 innerHTML 사용처가 없어짐)

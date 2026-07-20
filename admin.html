@@ -224,8 +224,8 @@ footer { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border
 <footer>Created by 박정진 &nbsp;|&nbsp; 관리자</footer>
 
 <script>
-const SUPABASE_URL = 'https://zeiygknvggokauetgrzk.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InplaXlna252Z2dva2F1ZXRncnprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjE4NzgsImV4cCI6MjA5MDczNzg3OH0.hTipybUz3nfgy_J2sSonwU8FOtM8Tvh4idsvPNx2OF4';
+const SUPABASE_URL = 'https://qvzlwhwxspmofrwdvgdd.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2emx3aHd4c3Btb2Zyd2R2Z2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxNzcyNDQsImV4cCI6MjA5OTc1MzI0NH0.uMdamJNn-GHRGfcTNnij6gapaG49bnXjC2fk32RcTfg';
 const AUTH_EMAIL_DOMAIN = '@skylife-agent.local';
 const USERNAME_RE = /^[a-zA-Z0-9_-]{4,20}$/;
 
@@ -465,7 +465,7 @@ function setNoticeLoading(msg) {
 /* ── 회원 승인 ── */
 async function loadAccounts() {
   const { data, error } = await sb.rpc('admin_list_accounts');
-  if (error) { alert('회원 목록을 불러오지 못했습니다.'); return; }
+  if (error) { alert('회원 목록을 불러오지 못했습니다.\n' + (error.message || JSON.stringify(error))); return; }
   allAccounts = data || [];
   accountsLoaded = true;
   renderAccounts();
@@ -539,7 +539,7 @@ function buildAccountCard(a) {
 
 async function setAccountStatus(id, status) {
   const { error } = await sb.rpc('admin_set_status', { account_id: id, new_status: status });
-  if (error) { alert('처리 실패. 다시 시도해주세요.'); return; }
+  if (error) { alert('처리 실패. 다시 시도해주세요.\n' + (error.message || JSON.stringify(error))); return; }
   const { data } = await sb.rpc('admin_list_accounts');
   allAccounts = data || allAccounts;
   renderAccounts();

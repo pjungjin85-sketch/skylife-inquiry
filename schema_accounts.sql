@@ -49,7 +49,7 @@ security definer
 set search_path = public
 as $$
 begin
-  if not exists (select 1 from public.profiles where id = auth.uid() and is_admin) then
+  if not exists (select 1 from public.profiles pr where pr.id = auth.uid() and pr.is_admin) then
     raise exception 'unauthorized';
   end if;
 

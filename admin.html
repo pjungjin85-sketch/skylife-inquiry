@@ -215,7 +215,7 @@ footer { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border
       <button class="filter-btn active" data-afilter="all" onclick="setAccountFilter('all')">전체</button>
       <button class="filter-btn" data-afilter="pending" onclick="setAccountFilter('pending')">승인 대기</button>
       <button class="filter-btn" data-afilter="approved" onclick="setAccountFilter('approved')">승인됨</button>
-      <button class="filter-btn" data-afilter="rejected" onclick="setAccountFilter('rejected')">반려됨</button>
+      <button class="filter-btn" data-afilter="rejected" onclick="setAccountFilter('rejected')">정지됨</button>
     </div>
     <div id="accounts-list-container"></div>
   </div>
@@ -506,7 +506,7 @@ function buildAccountCard(a) {
   const code = document.createElement('span'); code.className = 'account-code'; code.textContent = a.agency_code;
   const statusBadge = document.createElement('span');
   statusBadge.className = 'status-badge ' + (a.status === 'approved' ? 'answered' : a.status === 'rejected' ? 'rejected' : 'pending');
-  statusBadge.textContent = a.status === 'approved' ? '승인됨' : a.status === 'rejected' ? '반려됨' : '승인대기';
+  statusBadge.textContent = a.status === 'approved' ? '승인됨' : a.status === 'rejected' ? '정지됨' : '승인대기';
   nameRow.appendChild(name); nameRow.appendChild(code); nameRow.appendChild(statusBadge);
 
   const meta = document.createElement('div');
@@ -528,7 +528,7 @@ function buildAccountCard(a) {
   approveBtn.onclick = () => setAccountStatus(a.id, 'approved');
   const rejectBtn = document.createElement('button');
   rejectBtn.className = 'account-btn reject';
-  rejectBtn.textContent = '반려';
+  rejectBtn.textContent = '정지';
   rejectBtn.disabled = a.status === 'rejected';
   rejectBtn.onclick = () => setAccountStatus(a.id, 'rejected');
   actions.appendChild(approveBtn); actions.appendChild(rejectBtn);

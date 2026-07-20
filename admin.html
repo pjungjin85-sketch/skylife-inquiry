@@ -250,7 +250,7 @@ const AUTH_EMAIL_DOMAIN = '@skylife-agent.local';
 const USERNAME_RE = /^[a-zA-Z0-9_-]{4,20}$/;
 
 const { createClient } = supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storage: window.sessionStorage } });
 
 let allNotices = [];
 let noticeSearchQuery = '';

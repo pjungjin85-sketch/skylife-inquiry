@@ -21,6 +21,11 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg2); color: v
 /* 잠금 화면 */
 #lock-overlay { position: fixed; inset: 0; background: var(--bg2); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
 #lock-overlay.hidden { display: none; }
+.lock-loading { display: flex; justify-content: center; padding: 24px 0; }
+.spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--red); border-radius: 50%; animation: lock-spin .7s linear infinite; }
+@keyframes lock-spin { to { transform: rotate(360deg); } }
+.login-area { display: none; }
+.login-area.show { display: block; }
 .lock-box { background: var(--bg); border: 1px solid var(--border); border-top: 4px solid var(--red); border-radius: 16px; padding: 40px 32px; width: 100%; max-width: 360px; box-shadow: var(--shadow); }
 .lock-logo { font-size: 18px; font-weight: 900; color: var(--black); margin-bottom: 4px; }
 .lock-logo span { color: var(--red); }
@@ -149,7 +154,8 @@ footer { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border
 
 <!-- 잠금 화면 -->
 <div id="lock-overlay">
-  <div class="lock-box">
+  <div id="lock-loading" class="lock-loading"><span class="spinner"></span></div>
+  <div class="lock-box login-area" id="login-area">
     <div class="lock-logo">kt <span>skylife</span></div>
     <div class="lock-title">관리자 로그인</div>
     <div class="lock-label">관리자 아이디</div>
@@ -307,6 +313,12 @@ function unlockAdmin() {
   loadNotices();
 }
 
+function showLoginForm() {
+  document.getElementById('lock-loading').style.display = 'none';
+  document.getElementById('login-area').classList.add('show');
+  document.getElementById('admin-username').focus();
+}
+
 async function logout() {
   await sb.auth.signOut();
   location.reload();
@@ -314,10 +326,11 @@ async function logout() {
 
 async function checkSession() {
   const { data: { session } } = await sb.auth.getSession();
-  if (!session) return;
+  if (!session) { showLoginForm(); return; }
   const ok = await verifyAdmin(session.user.id);
-  if (ok) unlockAdmin();
-  else await sb.auth.signOut();
+  if (ok) { unlockAdmin(); return; }
+  await sb.auth.signOut();
+  showLoginForm();
 }
 
 /* ── 메인 탭 전환 ── */
@@ -604,7 +617,6 @@ async function setAccountStatus(id, status) {
 
 /* ── 초기화 ── */
 window.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('admin-username').focus();
   checkSession();
 });
 </script>

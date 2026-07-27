@@ -24,6 +24,8 @@ header { background: var(--bg); border-top: 3px solid var(--red); border-bottom:
 .header-badge { background: var(--red); color: #fff; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 3px; letter-spacing: .04em; }
 .header-title { font-size: 15px; font-weight: 700; color: var(--dark); }
 .header-count { font-size: 12px; color: var(--light); margin-left: auto; white-space: nowrap; }
+.guide-home-btn { margin-left: auto; padding: 6px 14px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; color: var(--mid); background: var(--bg); text-decoration: none; white-space: nowrap; font-family: inherit; flex-shrink: 0; }
+.guide-home-btn:hover { border-color: var(--red); color: var(--red); }
 
 .content { max-width: 1080px; margin: 0 auto; padding: 24px 20px; }
 
@@ -74,6 +76,7 @@ footer { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border
 
 @media (max-width: 480px) {
   .content { padding: 16px 14px; }
+  .guide-home-btn { padding: 5px 8px; font-size: 11px; }
 }
 </style>
 </head>
@@ -85,6 +88,7 @@ footer { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border
     <span class="header-badge">MOBILE</span>
     <span class="header-title">공지사항</span>
     <span class="header-count" id="count-label"></span>
+    <a href="https://skylife-guide-jyac.vercel.app/" class="guide-home-btn">돌아가기</a>
   </div>
 </header>
 

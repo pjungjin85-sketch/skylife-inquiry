@@ -252,3 +252,19 @@ inquiries
 ### 2. 배포
 - 커밋 `555317a` — 공지사항 목록에 등록일 컬럼 추가 (No 다음 위치)
 - `git push` + `npx vercel deploy --prod` → https://skylife-inquiry.vercel.app 반영 완료
+
+---
+
+## 2026-07-27 업데이트 — admin.html 새로고침 시 로그인 화면 깜빡임 제거
+
+### 배경
+- skylife-guide 네트워크 구조·보안 검토 중 admin.html만 새로고침할 때마다 로그인 폼이 잠깐 보였다 사라지는 현상 발견
+- 원인: 로그인 폼(`.lock-box`)이 항상 기본으로 화면에 노출된 채 시작하고, `checkSession()`이 세션 유효성을 비동기로 확인한 뒤에야 화면을 숨기는 구조였음. 다른 6개 사이트는 이미 2026-07-20에 로딩 스피너를 먼저 보여주는 방식으로 고쳤는데 admin.html은 그때 빠져 있었음
+
+### 수정
+- `#lock-loading` 스피너를 기본 노출로 바꾸고, 로그인 폼(`#login-area`)은 `checkSession()`이 세션 없음/관리자 아님으로 판정할 때만 `showLoginForm()`으로 노출하도록 변경 — 다른 사이트와 동일 패턴으로 통일
+- 아이디 입력란 포커스도 `DOMContentLoaded`에서 즉시 실행하던 걸 `showLoginForm()` 호출 시점(폼이 실제로 보일 때)으로 이동
+- 커밋: `4b5ebc2`
+
+### 배포
+- `git push origin main` → Vercel Git 연동 자동배포로 반영

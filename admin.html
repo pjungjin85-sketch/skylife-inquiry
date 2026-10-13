@@ -137,6 +137,34 @@ textarea { resize: vertical; min-height: 140px; line-height: 1.6; }
 .account-btn.reject { background: var(--red-light); color: var(--red); border-color: var(--red-border); }
 .account-btn.reject:hover { background: var(--red); color: #fff; }
 .account-btn:disabled { opacity: .45; cursor: not-allowed; }
+.account-btn.reset { background: var(--bg2); color: var(--dark); border-color: var(--border); }
+.account-btn.reset:hover { background: var(--black); color: #fff; border-color: var(--black); }
+
+/* 비밀번호 초기화 모달 */
+.pw-overlay { display: none; position: fixed; inset: 0; background: rgba(26,26,26,.5); z-index: 9998; align-items: center; justify-content: center; padding: 20px; }
+.pw-overlay.open { display: flex; }
+.pw-modal { background: var(--bg); border-radius: 14px; width: 100%; max-width: 380px; padding: 26px 24px 20px; box-shadow: 0 8px 28px rgba(0,0,0,.18); }
+.pw-modal h3 { font-size: 16px; font-weight: 800; color: var(--black); margin-bottom: 4px; }
+.pw-target { font-size: 12px; color: var(--mid); margin-bottom: 18px; line-height: 1.6; }
+.pw-target b { color: var(--black); }
+.pw-label { display: block; font-size: 11px; font-weight: 700; color: var(--dark); margin-bottom: 6px; }
+.pw-row { display: flex; gap: 6px; }
+.pw-row input { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; color: var(--black); outline: none; }
+.pw-row input:focus { border-color: var(--black); }
+.pw-row input[readonly] { background: var(--bg2); font-weight: 700; letter-spacing: .04em; }
+.pw-side-btn { flex-shrink: 0; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg2); color: var(--dark); font-size: 12px; font-weight: 700; font-family: inherit; cursor: pointer; white-space: nowrap; }
+.pw-side-btn:hover { background: var(--border); }
+.pw-msg { font-size: 12px; min-height: 17px; margin-top: 9px; line-height: 1.5; }
+.pw-msg.error { color: var(--red); }
+.pw-msg.ok { color: #15803D; }
+.pw-actions { display: flex; gap: 8px; margin-top: 18px; }
+.pw-actions button { flex: 1; padding: 11px; border-radius: 8px; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; border: 1px solid transparent; }
+.pw-cancel { background: var(--bg); color: var(--mid); border-color: var(--border); }
+.pw-cancel:hover { background: var(--bg2); color: var(--dark); }
+.pw-confirm { background: var(--red); color: #fff; }
+.pw-confirm:hover { background: var(--red2); }
+.pw-confirm:disabled { background: var(--light); cursor: not-allowed; }
+.pw-note { font-size: 11px; color: var(--mid); background: var(--bg2); border-radius: 8px; padding: 10px 12px; margin-top: 14px; line-height: 1.6; }
 .status-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; }
 .status-badge.pending { background: var(--yellow-light); color: var(--yellow); border: 1px solid var(--yellow-border); }
 .status-badge.answered { background: var(--green-light); color: var(--green); border: 1px solid var(--green-border); }
@@ -244,6 +272,36 @@ footer { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border
       <button class="filter-btn" data-afilter="rejected" onclick="setAccountFilter('rejected')">정지됨</button>
     </div>
     <div id="accounts-list-container"></div>
+  </div>
+</div>
+
+<!-- 비밀번호 초기화 -->
+<div class="pw-overlay" id="pwOverlay">
+  <div class="pw-modal">
+    <h3 id="pwTitle">비밀번호 초기화</h3>
+    <div class="pw-target" id="pwTarget"></div>
+    <div id="pwFormArea">
+      <label class="pw-label" for="pwNew">새 비밀번호</label>
+      <div class="pw-row">
+        <input type="text" id="pwNew" placeholder="6자 이상" autocomplete="off" spellcheck="false">
+        <button type="button" class="pw-side-btn" onclick="genTempPw()">임시 생성</button>
+      </div>
+      <div class="pw-msg" id="pwMsg"></div>
+    </div>
+    <div id="pwDoneArea" style="display:none">
+      <label class="pw-label">새 비밀번호 — 본인에게 전달하세요</label>
+      <div class="pw-row">
+        <input type="text" id="pwDoneValue" readonly>
+        <button type="button" class="pw-side-btn" onclick="copyNewPw()">복사</button>
+      </div>
+      <div class="pw-msg ok" id="pwDoneMsg"></div>
+      <div class="pw-note">전달받은 사람이 로그인한 뒤 비밀번호를 바꿀 수 있는 화면은 아직 없습니다. 바꿔주려면 이 버튼을 다시 쓰면 됩니다.</div>
+      <div class="pw-actions"><button class="pw-cancel" onclick="closePwReset()">닫기</button></div>
+    </div>
+    <div class="pw-actions" id="pwActions">
+      <button class="pw-cancel" onclick="closePwReset()">취소</button>
+      <button class="pw-confirm" id="pwConfirmBtn" onclick="submitPwReset()">초기화</button>
+    </div>
   </div>
 </div>
 
@@ -601,7 +659,11 @@ function buildAccountCard(a) {
   rejectBtn.textContent = '정지';
   rejectBtn.disabled = a.status === 'rejected';
   rejectBtn.onclick = () => setAccountStatus(a.id, 'rejected');
-  actions.appendChild(approveBtn); actions.appendChild(rejectBtn);
+  const resetBtn = document.createElement('button');
+  resetBtn.className = 'account-btn reset';
+  resetBtn.textContent = '비밀번호 초기화';
+  resetBtn.onclick = () => openPwReset(a);
+  actions.appendChild(approveBtn); actions.appendChild(rejectBtn); actions.appendChild(resetBtn);
 
   card.appendChild(info); card.appendChild(actions);
   return card;
@@ -614,6 +676,108 @@ async function setAccountStatus(id, status) {
   allAccounts = data || allAccounts;
   renderAccounts();
 }
+
+/* ── 비밀번호 초기화 ── */
+let pwResetTarget = null;
+
+function openPwReset(account) {
+  pwResetTarget = account;
+  const loginId = (account.email || '').split('@')[0];
+  document.getElementById('pwTitle').textContent = '비밀번호 초기화';
+  document.getElementById('pwTarget').innerHTML =
+    '<b>' + escapeHtml(account.name) + '</b> · ' + escapeHtml(account.agency_name) +
+    '<br>아이디 <b>' + escapeHtml(loginId) + '</b>';
+  document.getElementById('pwFormArea').style.display = '';
+  document.getElementById('pwDoneArea').style.display = 'none';
+  document.getElementById('pwActions').style.display = '';
+  document.getElementById('pwNew').value = '';
+  setPwMsg('', '');
+  const btn = document.getElementById('pwConfirmBtn');
+  btn.disabled = false; btn.textContent = '초기화';
+  document.getElementById('pwOverlay').classList.add('open');
+  document.getElementById('pwNew').focus();
+}
+
+function closePwReset() {
+  document.getElementById('pwOverlay').classList.remove('open');
+  pwResetTarget = null;
+}
+
+function escapeHtml(t) {
+  const d = document.createElement('div');
+  d.textContent = t == null ? '' : t;
+  return d.innerHTML;
+}
+
+function setPwMsg(type, text) {
+  const el = document.getElementById('pwMsg');
+  el.className = 'pw-msg' + (type ? ' ' + type : '');
+  el.textContent = text;
+}
+
+function genTempPw() {
+  // 헷갈리는 글자(0 O o l 1 I)는 뺀다 — 구두로 전달할 일이 많다
+  const chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const buf = new Uint32Array(10);
+  crypto.getRandomValues(buf);
+  const pw = Array.from(buf, n => chars[n % chars.length]).join('');
+  document.getElementById('pwNew').value = pw;
+  setPwMsg('', '');
+}
+
+async function submitPwReset() {
+  if (!pwResetTarget) return;
+  const pw = document.getElementById('pwNew').value.trim();
+  if (pw.length < 6) { setPwMsg('error', '비밀번호는 6자 이상 입력해주세요'); return; }
+
+  const btn = document.getElementById('pwConfirmBtn');
+  btn.disabled = true; btn.textContent = '처리 중...';
+
+  const { error } = await sb.rpc('admin_reset_password', {
+    account_id: pwResetTarget.id,
+    new_password: pw
+  });
+
+  if (error) {
+    btn.disabled = false; btn.textContent = '초기화';
+    const m = (error.message || '') + ' ' + (error.code || '');
+    if (/unauthorized/i.test(m))            setPwMsg('error', '관리자 권한이 없습니다. 다시 로그인해주세요.');
+    else if (/password too short/i.test(m)) setPwMsg('error', '비밀번호는 6자 이상이어야 합니다.');
+    else if (/account not found/i.test(m))  setPwMsg('error', '대상 계정을 찾을 수 없습니다. 목록을 새로고침해주세요.');
+    else if (/PGRST202|does not exist|Could not find the function/i.test(m))
+      setPwMsg('error', 'admin_reset_password 함수가 없습니다. schema_password_reset.sql을 먼저 실행해주세요.');
+    else setPwMsg('error', '처리 실패: ' + (error.message || JSON.stringify(error)));
+    return;
+  }
+
+  const loginId = (pwResetTarget.email || '').split('@')[0];
+  document.getElementById('pwFormArea').style.display = 'none';
+  document.getElementById('pwActions').style.display = 'none';
+  document.getElementById('pwDoneArea').style.display = '';
+  document.getElementById('pwTitle').textContent = '초기화했습니다';
+  document.getElementById('pwDoneValue').value = pw;
+  document.getElementById('pwDoneMsg').textContent =
+    '아이디 ' + loginId + ' 로 바로 로그인할 수 있습니다.';
+}
+
+async function copyNewPw() {
+  const el = document.getElementById('pwDoneValue');
+  try {
+    await navigator.clipboard.writeText(el.value);
+    document.getElementById('pwDoneMsg').textContent = '복사했습니다.';
+  } catch (e) {
+    el.select(); el.setSelectionRange(0, 99);
+    document.getElementById('pwDoneMsg').textContent = '직접 복사해주세요 (Cmd/Ctrl + C).';
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closePwReset();
+  if (e.key === 'Enter' && document.getElementById('pwOverlay').classList.contains('open')
+      && document.getElementById('pwFormArea').style.display !== 'none') {
+    submitPwReset();
+  }
+});
 
 /* ── 초기화 ── */
 window.addEventListener('DOMContentLoaded', () => {

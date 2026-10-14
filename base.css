@@ -118,10 +118,11 @@ header{
   letter-spacing:-.03em;white-space:nowrap;
 }
 .logo-text span{color:var(--red);}
+/* 바뀌지 않는 설명 글자다. 누를 수도 없고 상태도 아니므로 상자를 두지 않는다.
+   상자는 아래 .badge(상태 표시)에만 남긴다. */
 .header-badge{
-  background:var(--bg2);color:var(--mid);border:1px solid var(--border);
-  font-size:11px;font-weight:600;padding:2px 8px;
-  border-radius:var(--r-pill);white-space:nowrap;
+  font-size:var(--t-xs);font-weight:600;color:var(--mid);
+  padding-left:var(--s-3);border-left:1px solid var(--border);white-space:nowrap;
 }
 .header-title{
   font-size:var(--t-sm);font-weight:600;color:var(--dark);
@@ -183,17 +184,17 @@ header{
 .search-input:focus{border-color:var(--black);background:var(--bg);}
 .search-input::placeholder{color:var(--light);}
 
-.filter-group{display:flex;gap:6px;flex-wrap:wrap;}
+/* 필터는 밑줄 탭으로. 알약 버튼이 줄줄이 늘어서면 화면이 상자로 뒤덮인다. */
+.filter-group{display:flex;gap:var(--s-4);flex-wrap:wrap;align-items:center;}
 .filter-btn{
-  padding:8px 14px;border:1px solid var(--border);border-radius:var(--r-pill);
-  font-size:var(--t-xs);font-weight:600;color:var(--mid);background:var(--bg);
+  padding:6px 1px;border:none;background:none;
+  font-size:var(--t-sm);font-weight:600;color:var(--light);
   cursor:pointer;white-space:nowrap;
-  transition:border-color var(--dur-fast) var(--ease),
-             color var(--dur-fast) var(--ease),
-             background var(--dur-fast) var(--ease);
+  border-bottom:2px solid transparent;
+  transition:color var(--dur-fast) var(--ease),border-color var(--dur-fast) var(--ease);
 }
-.filter-btn:hover{border-color:var(--light);color:var(--dark);}
-.filter-btn.active{background:var(--black);border-color:var(--black);color:#fff;}
+.filter-btn:hover{color:var(--dark);}
+.filter-btn.active{color:var(--black);border-bottom-color:var(--red);}
 .filter-label{font-size:var(--t-xs);font-weight:600;color:var(--light);white-space:nowrap;}
 
 .select{
@@ -219,11 +220,15 @@ header{
 /* ============================================================
    태그 · 뱃지
    ============================================================ */
+/* 분류 라벨이라 상자가 필요 없다. 여러 개일 때는 가운뎃점으로 잇는다.
+   담는 쪽(.card-tags 등)은 display:block 이어야 구분점이 제대로 붙는다. */
 .tag{
-  display:inline-block;font-size:var(--t-xs);font-weight:500;
-  padding:3px 10px;border-radius:var(--r-pill);
-  background:var(--bg2);color:var(--mid);white-space:nowrap;
+  display:inline;font-size:var(--t-xs);font-weight:500;
+  color:var(--mid);white-space:nowrap;
 }
+.tag + .tag::before{content:'·';margin:0 6px;color:var(--border);}
+/* 여기서부터는 상자를 유지한다. 목록에서 찾아내야 하는 '상태' 표시라서다.
+   설명 라벨에서 상자를 걷어냈기 때문에, 남은 상자가 곧 상태를 뜻하게 된다. */
 .badge{
   display:inline-block;font-size:10.5px;font-weight:700;
   padding:1px 7px;border-radius:var(--r-pill);

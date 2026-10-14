@@ -46,7 +46,7 @@ body{background:var(--bg2);}
 .search-input:focus,.search-bar:focus{border-color:var(--black);}
 .search-input::placeholder,.search-bar::placeholder{color:var(--light);}
 .refresh-btn{
-  padding:8px 14px;border:1px solid var(--border);border-radius:var(--r-pill);
+  padding:8px 14px;border:1px solid var(--border);border-radius:var(--r-md);
   font-size:var(--t-xs);font-weight:600;color:var(--mid);background:var(--bg);
   cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;
   transition:border-color var(--dur-fast) var(--ease),color var(--dur-fast) var(--ease);
@@ -90,8 +90,7 @@ body{background:var(--bg2);}
 
 .cat-badge{
   display:inline-block;font-size:10.5px;font-weight:700;
-  padding:2px 9px;border-radius:var(--r-pill);white-space:nowrap;
-  background:var(--bg2);color:var(--mid);border:1px solid var(--border);
+  color:var(--light);white-space:nowrap;
 }
 .pin-badge{
   display:inline-flex;align-items:center;gap:3px;
@@ -199,7 +198,7 @@ body{background:var(--bg2);}
 .body-text{font-size:var(--t-sm);color:var(--dark);line-height:1.85;white-space:pre-wrap;}
 .card-actions{display:flex;gap:var(--s-2);margin-top:var(--s-4);flex-wrap:wrap;}
 .action-btn{
-  padding:8px 15px;border:1px solid var(--border);border-radius:var(--r-pill);
+  padding:8px 15px;border:1px solid var(--border);border-radius:var(--r-md);
   font-size:var(--t-xs);font-weight:600;color:var(--mid);background:var(--bg);cursor:pointer;
   transition:border-color var(--dur-fast) var(--ease),color var(--dur-fast) var(--ease);
 }
@@ -219,15 +218,14 @@ body{background:var(--bg2);}
 .account-name-row{display:flex;align-items:center;gap:var(--s-2);margin-bottom:4px;flex-wrap:wrap;}
 .account-name{font-size:var(--t-body);font-weight:700;color:var(--black);letter-spacing:-.02em;}
 .account-code{
-  font-size:var(--t-xs);font-weight:700;color:var(--dark);
-  background:var(--bg2);border:1px solid var(--border);
-  padding:2px 9px;border-radius:var(--r-pill);font-variant-numeric:tabular-nums;
+  font-size:var(--t-xs);font-weight:600;color:var(--mid);
+  font-variant-numeric:tabular-nums;
 }
 .account-meta{font-size:var(--t-sm);color:var(--mid);}
 .account-date{font-size:var(--t-xs);color:var(--light);margin-top:2px;}
 .account-actions{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;}
 .account-btn{
-  padding:8px 15px;border:1px solid var(--border);border-radius:var(--r-pill);
+  padding:8px 15px;border:1px solid var(--border);border-radius:var(--r-md);
   font-size:var(--t-xs);font-weight:600;cursor:pointer;background:var(--bg);color:var(--mid);
   transition:border-color var(--dur-fast) var(--ease),
              color var(--dur-fast) var(--ease),

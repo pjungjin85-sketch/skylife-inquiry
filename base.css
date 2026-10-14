@@ -419,3 +419,38 @@ body.ld-done :is(a,button):hover svg.ld>*{animation:ld-redraw .5s var(--ease-out
 @media (prefers-reduced-motion:reduce){
   svg.ld>*{stroke-dashoffset:0 !important;animation:none !important;}
 }
+
+/* ============================================================
+   BI 인트로 — bi-intro.js가 로그인 확인 중에 띄우는 'kt skylife' 글자 모임
+   ============================================================ */
+.bi-pending #lock-overlay>*{visibility:hidden;}
+#lock-overlay.bi-intro-on{background:var(--bg);}
+#lock-overlay.bi-intro-on>:not(.bi-intro){display:none !important;}
+.bi-intro{
+  display:flex;gap:.26em;
+  font-size:clamp(36px,10vw,56px);font-weight:800;letter-spacing:-.03em;line-height:1;
+  color:var(--black);user-select:none;
+  transition:transform .42s var(--ease-out),opacity .26s ease;
+}
+.bi-word{display:inline-flex;}
+.bi-red{color:var(--red);}
+.bi-ch{
+  display:inline-block;opacity:0;filter:blur(4px);
+  transform:translate(var(--x),var(--y)) rotate(var(--r)) scale(.55);
+}
+.bi-intro.go .bi-ch{
+  opacity:1;filter:none;transform:none;
+  transition:transform .7s var(--ease-out) calc(var(--i) * 22ms),
+             opacity .3s ease calc(var(--i) * 22ms),
+             filter .5s ease calc(var(--i) * 22ms);
+}
+.bi-intro.wait{animation:bi-breathe 1.4s ease-in-out infinite;}
+@keyframes bi-breathe{50%{opacity:.5;}}
+#lock-overlay.bi-out{opacity:0;transition:opacity .42s ease;}
+#lock-overlay.bi-out .bi-intro{transform:scale(1.08);}
+.bi-intro.leave{opacity:0;transform:translateY(-10px);}
+.lock-box.bi-enter{animation:bi-box-in .35s var(--ease-out);}
+@keyframes bi-box-in{from{opacity:0;transform:translateY(10px);}}
+@media (prefers-reduced-motion:reduce){
+  .bi-ch{transform:none !important;filter:none !important;}
+}

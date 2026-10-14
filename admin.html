@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o" crossorigin="anonymous"></script>
 <script src="line-draw.js"></script>
+<script src="bi-intro.js"></script>
 </head>
 <body class="page-admin">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
@@ -236,15 +237,19 @@ async function verifyAdmin(userId) {
 }
 
 function unlockAdmin() {
-  document.getElementById('lock-overlay').classList.add('hidden');
-  startLineDraw();
   loadNotices();
+  BiIntro.reveal(() => {
+    document.getElementById('lock-overlay').classList.add('hidden');
+    startLineDraw();
+  });
 }
 
 function showLoginForm() {
-  document.getElementById('lock-loading').style.display = 'none';
-  document.getElementById('login-area').classList.add('show');
-  document.getElementById('admin-username').focus();
+  BiIntro.toLogin(() => {
+    document.getElementById('lock-loading').style.display = 'none';
+    document.getElementById('login-area').classList.add('show');
+    document.getElementById('admin-username').focus();
+  });
 }
 
 async function logout() {

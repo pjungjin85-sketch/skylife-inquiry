@@ -403,3 +403,19 @@ footer{
   header,.toolbar,#lock-overlay,.modal-overlay,.quick-links{display:none !important;}
   body{background:#fff;}
 }
+
+/* ============================================================
+   라인 드로잉 — line-draw.js가 인라인으로 바꾼 아이콘(svg.ld)
+   ============================================================ */
+svg.ld>*{stroke-dasharray:1;stroke-dashoffset:1;}
+body.ld-run svg.ld>*{
+  animation:ld-draw var(--dur-slow) var(--ease-out) forwards;
+  animation-delay:calc(.15s + var(--ld-i,0) * .09s);
+}
+body.ld-done svg.ld>*{animation:none;stroke-dashoffset:0;}
+body.ld-done :is(a,button):hover svg.ld>*{animation:ld-redraw .5s var(--ease-out);}
+@keyframes ld-draw{to{stroke-dashoffset:0;}}
+@keyframes ld-redraw{from{stroke-dashoffset:1;}to{stroke-dashoffset:0;}}
+@media (prefers-reduced-motion:reduce){
+  svg.ld>*{stroke-dashoffset:0 !important;animation:none !important;}
+}

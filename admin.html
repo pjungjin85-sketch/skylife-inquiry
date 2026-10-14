@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="base.css">
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o" crossorigin="anonymous"></script>
+<script src="line-draw.js"></script>
 </head>
 <body class="page-admin">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
@@ -236,6 +237,7 @@ async function verifyAdmin(userId) {
 
 function unlockAdmin() {
   document.getElementById('lock-overlay').classList.add('hidden');
+  startLineDraw();
   loadNotices();
 }
 

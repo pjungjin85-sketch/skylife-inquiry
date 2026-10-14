@@ -270,8 +270,9 @@ body.page-admin{background:var(--bg);}
 /* 이름 · 대리점코드 · 소속 · 가입일 · 상태 · 관리 */
 .account-row{
   display:grid;
-  grid-template-columns:minmax(80px,1fr) minmax(90px,1fr) minmax(110px,1.4fr) 90px 80px 220px;
+  grid-template-columns:1fr 1fr 1.2fr 100px 90px 220px;
   align-items:center;column-gap:var(--s-4);
+  text-align:center; /* 머리줄·내용 모두 열 가운데에 맞춘다 */
   padding:var(--s-3) var(--s-2);
   border-top:1px solid var(--border);
   font-size:var(--t-sm);
@@ -282,13 +283,12 @@ body.page-admin{background:var(--bg);}
   padding-top:10px;padding-bottom:10px;
   font-size:var(--t-xs);font-weight:600;color:var(--light);
 }
-.account-head span:last-child{text-align:right;}
 .account-name{font-weight:700;color:var(--black);letter-spacing:-.02em;}
 .account-code{color:var(--mid);font-variant-numeric:tabular-nums;}
 .account-meta{color:var(--mid);}
 .account-date{font-size:var(--t-xs);color:var(--light);font-variant-numeric:tabular-nums;}
 .account-row>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.account-actions{display:flex;gap:6px;justify-content:flex-end;}
+.account-actions{display:flex;gap:6px;justify-content:center;}
 /* 상태는 상자 없이 글자로만 — 처리해야 할 '승인대기'만 눈에 띄게 */
 .account-status{font-size:var(--t-sm);font-weight:600;}
 .account-status.pending{color:var(--warn);}
@@ -439,16 +439,18 @@ body.page-admin{background:var(--bg);}
   /* 900px 이하(태블릿·모바일): 표 열이 다 안 들어가므로 머리줄을 숨기고 한 계정을 세 줄로 — 이름·코드·상태 / 소속·가입일 / 버튼 */
   .account-head{display:none;}
   .account-row{
-    grid-template-columns:auto 1fr auto;
-    grid-template-areas:"name code status" "meta date date" "act act act";
+    /* 이름 칸 폭을 고정해 줄마다 코드 위치가 같게, 오른쪽 열은 상태·가입일 */
+    grid-template-columns:72px 1fr auto;
+    grid-template-areas:"name code status" "meta meta date" "act act act";
     row-gap:4px;column-gap:var(--s-2);padding:var(--s-3) 0;
+    text-align:left;
   }
   .account-row:nth-child(2){border-top:none;}
   .account-name{grid-area:name;}
   .account-code{grid-area:code;font-size:var(--t-xs);}
-  .account-status{grid-area:status;}
+  .account-status{grid-area:status;text-align:right;}
   .account-meta{grid-area:meta;font-size:var(--t-xs);}
-  .account-date{grid-area:date;}
+  .account-date{grid-area:date;text-align:right;}
   .account-actions{grid-area:act;justify-content:flex-start;margin-top:6px;}
 }
 

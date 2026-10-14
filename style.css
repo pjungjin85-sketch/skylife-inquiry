@@ -1,0 +1,373 @@
+@charset "UTF-8";
+/* ============================================================
+   skylife-inquiry — 공지사항(index.html) + 관리자(admin.html)
+   공통 토큰·컴포넌트는 base.css. 이 파일은 두 화면이 함께 쓴다.
+   ============================================================ */
+
+:root{--wrap:1080px;}
+body{background:var(--bg2);}
+
+.header-inner{max-width:var(--wrap);}
+.header-count,.list-count{font-size:var(--t-xs);color:var(--light);}
+.guide-home-btn{
+  display:inline-flex;align-items:center;gap:6px;margin-left:auto;
+  padding:7px 13px;border:1px solid var(--border);border-radius:var(--r-md);
+  font-size:var(--t-xs);font-weight:600;color:var(--dark);background:var(--bg);
+  text-decoration:none;white-space:nowrap;flex-shrink:0;
+  transition:border-color var(--dur-fast) var(--ease),background var(--dur-fast) var(--ease);
+}
+.guide-home-btn svg{width:14px;height:14px;color:var(--light);}
+.guide-home-btn:hover{border-color:var(--light);background:var(--bg2);}
+.guide-home-btn:hover svg{color:var(--black);}
+.logout-btn{
+  margin-left:auto;padding:7px 14px;
+  border:1px solid var(--border);border-radius:var(--r-md);
+  font-size:var(--t-xs);font-weight:600;color:var(--mid);background:var(--bg);
+  cursor:pointer;white-space:nowrap;
+  transition:border-color var(--dur-fast) var(--ease),color var(--dur-fast) var(--ease);
+}
+.logout-btn:hover{border-color:var(--light);color:var(--black);}
+
+.content{max-width:var(--wrap);margin:0 auto;padding:var(--s-5) var(--s-5) var(--s-8);}
+
+/* ============================================================
+   목록 머리줄 · 검색
+   ============================================================ */
+.list-header{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:var(--s-2);margin-bottom:var(--s-4);flex-wrap:wrap;
+}
+.search-input,.search-bar{
+  flex:1;min-width:170px;max-width:280px;
+  padding:9px 13px;border:1px solid var(--border);border-radius:var(--r-md);
+  font-size:var(--t-sm);color:var(--black);background:var(--bg);outline:none;
+  transition:border-color var(--dur-fast) var(--ease);
+}
+.search-input:focus,.search-bar:focus{border-color:var(--black);}
+.search-input::placeholder,.search-bar::placeholder{color:var(--light);}
+.refresh-btn{
+  padding:8px 14px;border:1px solid var(--border);border-radius:var(--r-pill);
+  font-size:var(--t-xs);font-weight:600;color:var(--mid);background:var(--bg);
+  cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;
+  transition:border-color var(--dur-fast) var(--ease),color var(--dur-fast) var(--ease);
+}
+.refresh-btn svg{width:13px;height:13px;}
+.refresh-btn:hover{border-color:var(--light);color:var(--black);}
+
+/* ============================================================
+   공지 목록 표 (index.html)
+   ============================================================ */
+.table-wrap{
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);
+}
+.notice-table{width:100%;min-width:520px;}
+.notice-table th{
+  background:var(--bg2);font-size:var(--t-xs);font-weight:700;color:var(--dark);
+  padding:11px 12px;border-bottom:1px solid var(--border);
+  text-align:center;white-space:nowrap;
+}
+.notice-table td{
+  padding:13px 12px;border-bottom:1px solid var(--border);
+  font-size:var(--t-sm);color:var(--dark);text-align:center;line-height:1.6;
+}
+.notice-table tr:last-child td{border-bottom:none;}
+.notice-table tbody tr:hover td{background:var(--bg3);}
+.col-no{width:56px;color:var(--light);font-variant-numeric:tabular-nums;}
+.col-cat{width:92px;}
+.col-title{text-align:left;}
+.col-view{width:76px;color:var(--light);font-variant-numeric:tabular-nums;}
+.col-date{width:92px;color:var(--light);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.title-link{
+  color:var(--black);font-weight:700;cursor:pointer;text-align:left;
+  display:block;letter-spacing:-.02em;
+}
+.title-link:hover{text-decoration:underline;}
+.content-preview{
+  display:block;font-size:var(--t-xs);color:var(--light);font-weight:400;
+  text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;
+}
+
+.cat-badge{
+  display:inline-block;font-size:10.5px;font-weight:700;
+  padding:2px 9px;border-radius:var(--r-pill);white-space:nowrap;
+  background:var(--bg2);color:var(--mid);border:1px solid var(--border);
+}
+.pin-badge{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:10.5px;font-weight:700;color:var(--red);
+}
+.pin-badge svg{width:11px;height:11px;}
+.view-badge{font-size:var(--t-xs);color:var(--light);font-variant-numeric:tabular-nums;}
+
+/* ============================================================
+   공지 상세 (index.html)
+   ============================================================ */
+.back-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:var(--t-sm);font-weight:600;color:var(--mid);
+  background:none;border:none;cursor:pointer;margin-bottom:var(--s-4);padding:4px 0;
+  transition:color var(--dur-fast) var(--ease);
+}
+.back-btn svg{width:15px;height:15px;}
+.back-btn:hover{color:var(--black);}
+.detail-card{
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:var(--s-6) var(--s-5);
+}
+.detail-top{display:flex;align-items:center;gap:var(--s-2);flex-wrap:wrap;margin-bottom:var(--s-3);}
+.detail-title{font-size:21px;font-weight:700;color:var(--black);line-height:1.4;letter-spacing:-.03em;}
+.detail-meta{
+  font-size:var(--t-xs);color:var(--light);display:flex;gap:var(--s-3);flex-wrap:wrap;
+  padding-bottom:var(--s-4);margin-bottom:var(--s-4);border-bottom:1px solid var(--border);
+}
+.detail-content{font-size:var(--t-body);color:var(--dark);line-height:1.9;white-space:pre-wrap;}
+
+/* ============================================================
+   관리자 — 탭 · 폼
+   ============================================================ */
+.main-tab-bar{display:flex;gap:var(--s-5);margin-bottom:var(--s-5);border-bottom:1px solid var(--border);}
+.main-tab-btn{
+  padding:0 0 11px;font-size:var(--t-body);font-weight:600;color:var(--light);
+  border:none;background:none;cursor:pointer;
+  border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;
+  transition:color var(--dur-fast) var(--ease),border-color var(--dur-fast) var(--ease);
+}
+.main-tab-btn:hover{color:var(--dark);}
+.main-tab-btn.active{color:var(--black);border-bottom-color:var(--red);}
+.main-tab-content{display:none;}
+.main-tab-content.active{display:block;}
+
+.form-card{
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:var(--s-5);margin-bottom:var(--s-5);
+}
+.form-card h2{font-size:var(--t-h3);font-weight:700;color:var(--black);margin-bottom:var(--s-4);letter-spacing:-.025em;}
+.form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:var(--s-3);}
+.form-group label{font-size:var(--t-xs);font-weight:600;color:var(--dark);}
+.form-group input,.form-group select,.form-group textarea{
+  width:100%;padding:11px 13px;
+  border:1px solid var(--border);border-radius:var(--r-md);
+  font-size:var(--t-sm);color:var(--black);background:var(--bg);outline:none;
+  transition:border-color var(--dur-fast) var(--ease);
+}
+.form-group textarea{min-height:150px;resize:vertical;line-height:1.8;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--black);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:var(--s-3);}
+.form-actions{display:flex;gap:var(--s-2);align-items:center;margin-top:var(--s-4);flex-wrap:wrap;}
+.form-feedback{font-size:var(--t-xs);margin-top:var(--s-2);min-height:17px;}
+.form-feedback.ok{color:var(--ok);}
+.form-feedback.fail{color:var(--red);}
+.checkbox-label{display:flex;align-items:center;gap:8px;font-size:var(--t-sm);color:var(--dark);cursor:pointer;}
+.checkbox-label input[type="checkbox"]{width:auto;accent-color:var(--black);cursor:pointer;}
+
+.btn-primary{
+  padding:12px 22px;background:var(--red);color:#fff;
+  border:1px solid var(--red);border-radius:var(--r-md);
+  font-size:var(--t-sm);font-weight:700;cursor:pointer;
+  transition:background var(--dur-fast) var(--ease);
+}
+.btn-primary:hover{background:var(--red2);border-color:var(--red2);}
+.btn-primary:disabled{background:var(--light);border-color:var(--light);cursor:not-allowed;}
+.btn-ghost{
+  padding:12px 18px;background:var(--bg);color:var(--mid);
+  border:1px solid var(--border);border-radius:var(--r-md);
+  font-size:var(--t-sm);font-weight:600;cursor:pointer;
+  transition:border-color var(--dur-fast) var(--ease),color var(--dur-fast) var(--ease);
+}
+.btn-ghost:hover{border-color:var(--light);color:var(--black);}
+
+/* ============================================================
+   관리자 — 공지 카드
+   ============================================================ */
+.notice-card{
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);
+  margin-bottom:var(--s-2);overflow:hidden;
+  transition:border-color var(--dur-fast) var(--ease);
+}
+.notice-card:hover{border-color:#D4D4D4;}
+.card-head{padding:var(--s-4);cursor:pointer;display:flex;align-items:flex-start;gap:var(--s-3);}
+.card-head-info{flex:1;min-width:0;}
+.card-top{display:flex;align-items:center;gap:var(--s-2);flex-wrap:wrap;margin-bottom:4px;}
+.card-title{font-size:var(--t-body);font-weight:700;color:var(--black);line-height:1.45;letter-spacing:-.02em;}
+.card-meta{font-size:var(--t-xs);color:var(--light);margin-top:3px;}
+.card-chevron{flex-shrink:0;color:var(--light);line-height:0;transition:transform var(--dur) var(--ease);}
+.card-chevron svg{width:16px;height:16px;}
+.notice-card.card-open .card-chevron{transform:rotate(180deg);color:var(--black);}
+.card-body{display:none;border-top:1px solid var(--border);padding:var(--s-4);}
+.notice-card.card-open .card-body{display:block;}
+.body-text{font-size:var(--t-sm);color:var(--dark);line-height:1.85;white-space:pre-wrap;}
+.card-actions{display:flex;gap:var(--s-2);margin-top:var(--s-4);flex-wrap:wrap;}
+.action-btn{
+  padding:8px 15px;border:1px solid var(--border);border-radius:var(--r-pill);
+  font-size:var(--t-xs);font-weight:600;color:var(--mid);background:var(--bg);cursor:pointer;
+  transition:border-color var(--dur-fast) var(--ease),color var(--dur-fast) var(--ease);
+}
+.action-btn:hover{border-color:var(--light);color:var(--black);}
+.action-btn.danger:hover{border-color:var(--red-border);color:var(--red);}
+
+/* ============================================================
+   관리자 — 회원 승인
+   ============================================================ */
+.filter-bar{display:flex;gap:6px;margin-bottom:var(--s-4);flex-wrap:wrap;}
+.account-card{
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);
+  padding:var(--s-4) var(--s-5);margin-bottom:var(--s-2);
+  display:flex;align-items:center;gap:var(--s-4);flex-wrap:wrap;
+}
+.account-info{flex:1;min-width:200px;}
+.account-name-row{display:flex;align-items:center;gap:var(--s-2);margin-bottom:4px;flex-wrap:wrap;}
+.account-name{font-size:var(--t-body);font-weight:700;color:var(--black);letter-spacing:-.02em;}
+.account-code{
+  font-size:var(--t-xs);font-weight:700;color:var(--dark);
+  background:var(--bg2);border:1px solid var(--border);
+  padding:2px 9px;border-radius:var(--r-pill);font-variant-numeric:tabular-nums;
+}
+.account-meta{font-size:var(--t-sm);color:var(--mid);}
+.account-date{font-size:var(--t-xs);color:var(--light);margin-top:2px;}
+.account-actions{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;}
+.account-btn{
+  padding:8px 15px;border:1px solid var(--border);border-radius:var(--r-pill);
+  font-size:var(--t-xs);font-weight:600;cursor:pointer;background:var(--bg);color:var(--mid);
+  transition:border-color var(--dur-fast) var(--ease),
+             color var(--dur-fast) var(--ease),
+             background var(--dur-fast) var(--ease);
+}
+.account-btn:hover{border-color:var(--light);color:var(--black);}
+.account-btn.approve:hover{background:var(--ok-light);border-color:var(--ok-border);color:var(--ok);}
+.account-btn.reject:hover{background:var(--red-light);border-color:var(--red-border);color:var(--red);}
+.account-btn:disabled{opacity:.4;cursor:not-allowed;}
+.account-btn:disabled:hover{background:var(--bg);border-color:var(--border);color:var(--mid);}
+
+.status-badge{
+  display:inline-block;font-size:10.5px;font-weight:700;
+  padding:2px 9px;border-radius:var(--r-pill);white-space:nowrap;
+}
+.status-badge.pending{background:var(--warn-light);color:var(--warn);border:1px solid var(--warn-border);}
+.status-badge.answered{background:var(--ok-light);color:var(--ok);border:1px solid var(--ok-border);}
+.status-badge.rejected{background:var(--red-light);color:var(--red);border:1px solid var(--red-border);}
+
+/* ============================================================
+   공통 상태
+   ============================================================ */
+.loading{text-align:center;padding:var(--s-7) var(--s-5);font-size:var(--t-sm);color:var(--light);}
+.empty{text-align:center;padding:var(--s-8) var(--s-5);}
+.empty-icon{display:flex;justify-content:center;margin-bottom:var(--s-3);}
+.empty-icon svg{width:38px;height:38px;color:var(--border);}
+.empty-text{font-size:var(--t-body);color:var(--mid);}
+
+/* ============================================================
+   관리자 잠금 화면
+   ============================================================ */
+.lock-box{
+  background:var(--bg);border:1px solid var(--border);border-top:3px solid var(--red);
+  border-radius:var(--r-lg);padding:var(--s-7) var(--s-6) var(--s-6);
+  width:100%;max-width:380px;box-shadow:var(--shadow);
+}
+.lock-title{font-size:var(--t-h3);font-weight:700;color:var(--black);text-align:center;margin-bottom:var(--s-5);letter-spacing:-.025em;}
+.lock-label{font-size:var(--t-xs);font-weight:600;color:var(--dark);margin-bottom:5px;display:block;}
+.lock-input-wrap{position:relative;margin-bottom:var(--s-3);}
+.lock-input-wrap input{
+  width:100%;padding:11px 42px 11px 13px;
+  border:1px solid var(--border);border-radius:var(--r-md);
+  font-size:var(--t-sm);color:var(--black);background:var(--bg);outline:none;
+  transition:border-color var(--dur-fast) var(--ease);
+}
+.lock-input-wrap input:focus{border-color:var(--black);}
+.lock-toggle{
+  position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;color:var(--light);padding:6px;line-height:0;
+}
+.lock-toggle svg{width:17px;height:17px;}
+.lock-toggle:hover{color:var(--black);}
+.lock-btn{
+  width:100%;padding:13px;background:var(--red);color:#fff;
+  border:none;border-radius:var(--r-md);
+  font-size:var(--t-body);font-weight:700;cursor:pointer;margin-top:var(--s-1);
+  transition:background var(--dur-fast) var(--ease);
+}
+.lock-btn:hover{background:var(--red2);}
+.lock-btn:disabled{background:var(--light);cursor:not-allowed;}
+.lock-error{font-size:var(--t-sm);color:var(--red);text-align:center;min-height:18px;margin-top:10px;}
+.lock-footer{font-size:var(--t-xs);color:var(--light);text-align:center;margin-top:var(--s-4);line-height:1.6;}
+.login-area{display:none;}
+.login-area.show{display:block;}
+.auth-tabs{display:flex;gap:var(--s-5);margin-bottom:var(--s-5);border-bottom:1px solid var(--border);}
+.auth-tab-btn{
+  padding:0 0 10px;font-size:var(--t-body);font-weight:600;color:var(--light);
+  border:none;background:none;cursor:pointer;
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+  transition:color var(--dur-fast) var(--ease),border-color var(--dur-fast) var(--ease);
+}
+.auth-tab-btn.active{color:var(--black);border-bottom-color:var(--red);}
+
+/* ============================================================
+   비밀번호 초기화 모달 (관리자)
+   ============================================================ */
+.pw-overlay{
+  display:none;position:fixed;inset:0;background:rgba(26,26,26,.5);z-index:9998;
+  align-items:center;justify-content:center;padding:var(--s-5);
+}
+.pw-overlay.open{display:flex;}
+.pw-modal{
+  background:var(--bg);border-radius:var(--r-lg);width:100%;max-width:380px;
+  padding:var(--s-6) var(--s-5) var(--s-5);box-shadow:var(--shadow-hover);
+}
+.pw-modal h3{font-size:var(--t-h3);font-weight:700;color:var(--black);margin-bottom:4px;letter-spacing:-.025em;}
+.pw-target{font-size:var(--t-xs);color:var(--mid);margin-bottom:var(--s-5);line-height:1.7;}
+.pw-target b{color:var(--black);}
+.pw-label{display:block;font-size:var(--t-xs);font-weight:600;color:var(--dark);margin-bottom:6px;}
+.pw-row{display:flex;gap:6px;}
+.pw-row input{
+  flex:1;min-width:0;padding:11px 13px;
+  border:1px solid var(--border);border-radius:var(--r-md);
+  font-size:var(--t-sm);color:var(--black);outline:none;background:var(--bg);
+  transition:border-color var(--dur-fast) var(--ease);
+}
+.pw-row input:focus{border-color:var(--black);}
+.pw-row input[readonly]{background:var(--bg2);font-weight:700;letter-spacing:.04em;}
+.pw-side-btn{
+  flex-shrink:0;padding:0 13px;
+  border:1px solid var(--border);border-radius:var(--r-md);
+  background:var(--bg);color:var(--dark);
+  font-size:var(--t-xs);font-weight:600;cursor:pointer;white-space:nowrap;
+  transition:border-color var(--dur-fast) var(--ease),background var(--dur-fast) var(--ease);
+}
+.pw-side-btn:hover{border-color:var(--light);background:var(--bg2);}
+.pw-msg{font-size:var(--t-xs);min-height:17px;margin-top:9px;line-height:1.6;}
+.pw-msg.error{color:var(--red);}
+.pw-msg.ok{color:var(--ok);}
+.pw-actions{display:flex;gap:var(--s-2);margin-top:var(--s-5);}
+.pw-actions button{
+  flex:1;padding:12px;border-radius:var(--r-md);
+  font-size:var(--t-sm);font-weight:700;cursor:pointer;border:1px solid transparent;
+  transition:background var(--dur-fast) var(--ease),border-color var(--dur-fast) var(--ease);
+}
+.pw-cancel{background:var(--bg);color:var(--mid);border-color:var(--border);}
+.pw-cancel:hover{background:var(--bg2);color:var(--dark);}
+.pw-confirm{background:var(--red);color:#fff;}
+.pw-confirm:hover{background:var(--red2);}
+.pw-confirm:disabled{background:var(--light);cursor:not-allowed;}
+.pw-note{
+  font-size:var(--t-xs);color:var(--mid);background:var(--bg2);
+  border-radius:var(--r-md);padding:11px 13px;margin-top:var(--s-4);line-height:1.7;
+}
+
+/* ============================================================
+   모바일
+   ============================================================ */
+@media(max-width:768px){
+  .content{padding:var(--s-4) var(--s-4) 60px;}
+  .form-row{grid-template-columns:1fr;}
+  .detail-card{padding:var(--s-5) var(--s-4);}
+  .detail-title{font-size:18px;}
+  .search-input,.search-bar{max-width:100%;}
+  .account-card{padding:var(--s-4);}
+  .account-actions{width:100%;}
+  .account-btn{flex:1;text-align:center;}
+  .main-tab-bar{gap:var(--s-4);}
+}
+
+/* 목록 '내용' 열 · 체크박스 전용 폼 그룹 */
+.col-content{text-align:left;color:var(--mid);font-size:var(--t-xs);}
+.form-group-checkbox{flex-direction:row;align-items:center;gap:var(--s-3);}

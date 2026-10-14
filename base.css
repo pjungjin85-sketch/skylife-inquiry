@@ -3,14 +3,16 @@
    kt skylife 공통 디자인 시스템
    Created by 박정진
    ------------------------------------------------------------
-   아래 4개 저장소가 이 파일을 동일하게 쓴다. 고칠 때는 한 곳에서 고치고
-   나머지로 그대로 복사할 것 (shasum으로 동일성 확인). 페이지별 스타일은
-   각 저장소의 style.css에 둔다.
-     skylife-plans / skylife-commission-calculator
-     skylife-addons / skylife-mobile-faq
+   아래 7개 저장소가 이 파일을 동일하게 쓴다. 고칠 때는 한 곳에서 고치고
+   나머지로 그대로 복사할 것. 복사 후 shasum으로 동일성을 확인한다.
+   페이지별 스타일은 각 저장소의 style.css에 둔다.
+     skylife-guide / skylife-plans / skylife-commission-calculator
+     skylife-addons / skylife-mobile-faq / TPS / skylife-inquiry
 
-   skylife-guide는 아직 분리 전이라 자체 style.css 하나에 토큰까지
-   들어 있다. 토큰을 바꾸면 그쪽도 같이 고쳐야 한다.
+   동일성 확인:
+     for d in skylife-guide skylife-plans skylife-commission-calculator \
+              skylife-addons skylife-mobile-faq TPS skylife-inquiry; do
+       shasum -a 256 $d/base.css; done
    ============================================================ */
 
 :root{
@@ -44,7 +46,8 @@
 
   /* ── 모서리: 위계별로 다르게 쓴다 ──
      pill = 태그/뱃지, md = 입력/버튼/안쪽 상자, lg = 카드 */
-  --r-pill:999px;
+  --r-pill:999px;   /* 토글 스위치처럼 '완전히 둥근' 모양이 꼭 필요한 곳에만 */
+  --r-tag:4px;      /* 상태·식별 배지 — 각진 태그 */
   --r-sm:6px;
   --r-md:10px;
   --r-lg:16px;
@@ -231,7 +234,7 @@ header{
    설명 라벨에서 상자를 걷어냈기 때문에, 남은 상자가 곧 상태를 뜻하게 된다. */
 .badge{
   display:inline-block;font-size:10.5px;font-weight:700;
-  padding:1px 7px;border-radius:var(--r-pill);
+  padding:1px 7px;border-radius:var(--r-tag);
   vertical-align:middle;white-space:nowrap;
 }
 .badge-red{background:var(--red);color:#fff;}

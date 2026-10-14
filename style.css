@@ -130,6 +130,60 @@ body{background:var(--bg2);}
 }
 .main-tab-btn:hover{color:var(--dark);}
 .main-tab-btn.active{color:var(--black);border-bottom-color:var(--red);}
+/* ============================================================
+   관리자 페이지 — 현장영업 가이드와 같은 흰 바탕 · 섹션 머리 일러스트
+   ============================================================ */
+body.page-admin{background:var(--bg);}
+.page-admin .main-tab-bar{margin-bottom:var(--s-6);}
+/* 섹션 머리 — skylife-guide/style.css와 동일 */
+.section-head{
+  display:flex;
+  align-items:baseline;
+  gap:var(--s-3);
+  margin-bottom:var(--s-5);
+  padding-bottom:var(--s-3);
+  border-bottom:1px solid var(--border);
+}
+.section-num{
+  font-size:var(--t-sm);
+  font-weight:700;
+  color:var(--light);
+  font-variant-numeric:tabular-nums;
+}
+.section-head h2{
+  font-size:var(--t-h2);
+  font-weight:700;
+  color:var(--black);
+  letter-spacing:-.03em;
+  line-height:1.4;
+}
+.section-head .section-note{
+  margin-left:auto;
+  font-size:var(--t-xs);
+  color:var(--light);
+  white-space:nowrap;
+}
+
+/* 섹션 머리 일러스트 — 그림이 구분선 위에 서 있도록 아래로 붙인다 */
+.section-head.has-illust{align-items:flex-end;padding-bottom:0;}
+.section-head-text{
+  display:flex;flex-wrap:wrap;align-items:baseline;
+  column-gap:var(--s-3);row-gap:var(--s-1);
+  padding-bottom:var(--s-3);
+  min-width:0;
+}
+.has-illust .section-note{margin-left:0;flex-basis:100%;}
+.section-illust{
+  flex:none;margin-left:auto;
+  height:120px;width:auto;
+  margin-bottom:-1px;
+}
+/* 번호와 제목이 떨어지지 않게: 제목이 줄어들며 줄바꿈한다 */
+.has-illust .section-head-text h2{flex:1 1 0;min-width:0;}
+@media(max-width:768px){
+  .section-illust{height:92px;max-width:32%;object-fit:contain;object-position:right bottom;}
+}
+
 .main-tab-content{display:none;}
 .main-tab-content.active{display:block;}
 
@@ -176,7 +230,7 @@ body{background:var(--bg2);}
    관리자 — 공지 카드
    ============================================================ */
 .notice-card{
-  background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--r-lg);
   margin-bottom:var(--s-2);overflow:hidden;
   transition:border-color var(--dur-fast) var(--ease);
 }
@@ -207,7 +261,7 @@ body{background:var(--bg2);}
 .filter-bar{display:flex;gap:var(--s-4);margin-bottom:var(--s-4);flex-wrap:wrap;border-bottom:1px solid var(--border);}
 .filter-bar .filter-btn{margin-bottom:-1px;}
 .account-card{
-  background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--r-lg);
   padding:var(--s-4) var(--s-5);margin-bottom:var(--s-2);
   display:flex;align-items:center;gap:var(--s-4);flex-wrap:wrap;
 }
@@ -231,6 +285,8 @@ body{background:var(--bg2);}
 .account-btn:hover{border-color:var(--light);color:var(--black);}
 .account-btn.approve:hover{background:var(--ok-light);border-color:var(--ok-border);color:var(--ok);}
 .account-btn.reject:hover{background:var(--red-light);border-color:var(--red-border);color:var(--red);}
+.account-btn.primary{background:var(--red);border-color:var(--red);color:#fff;}
+.account-btn.primary:hover{background:var(--red2);border-color:var(--red2);color:#fff;}
 .account-btn:disabled{opacity:.4;cursor:not-allowed;}
 .account-btn:disabled:hover{background:var(--bg);border-color:var(--border);color:var(--mid);}
 

@@ -487,33 +487,34 @@ function renderAccounts() {
     container.appendChild(empty);
     return;
   }
-  filtered.forEach(a => container.appendChild(buildAccountCard(a)));
+  // 표 형태 목록: 머리줄 + 계정마다 한 줄
+  const list = document.createElement('div');
+  list.className = 'account-list';
+  const headRow = document.createElement('div');
+  headRow.className = 'account-row account-head';
+  ['이름', '대리점코드', '소속', '가입일', '상태', '관리'].forEach(t => {
+    const c = document.createElement('span'); c.textContent = t; headRow.appendChild(c);
+  });
+  list.appendChild(headRow);
+  filtered.forEach(a => list.appendChild(buildAccountRow(a)));
+  container.appendChild(list);
 }
 
-function buildAccountCard(a) {
-  const card = document.createElement('div');
-  card.className = 'account-card';
+function buildAccountRow(a) {
+  const row = document.createElement('div');
+  row.className = 'account-row';
 
-  const info = document.createElement('div');
-  info.className = 'account-info';
-  const nameRow = document.createElement('div');
-  nameRow.className = 'account-name-row';
-  const name = document.createElement('span'); name.className = 'account-name'; name.textContent = a.name;
-  const code = document.createElement('span'); code.className = 'account-code'; code.textContent = a.agency_code;
+  const cell = (cls, text) => {
+    const c = document.createElement('span'); c.className = cls; c.textContent = text || '-'; return c;
+  };
+  const date = new Date(a.created_at).toLocaleDateString('ko-KR', { year:'2-digit', month:'2-digit', day:'2-digit' });
+
+  const status = document.createElement('span');
+  status.className = 'account-status';
   const statusBadge = document.createElement('span');
   statusBadge.className = 'status-badge ' + (a.status === 'approved' ? 'answered' : a.status === 'rejected' ? 'rejected' : 'pending');
   statusBadge.textContent = a.status === 'approved' ? '승인됨' : a.status === 'rejected' ? '정지됨' : '승인대기';
-  nameRow.appendChild(name); nameRow.appendChild(code); nameRow.appendChild(statusBadge);
-
-  const meta = document.createElement('div');
-  meta.className = 'account-meta';
-  meta.textContent = a.agency_name;
-
-  const date = document.createElement('div');
-  date.className = 'account-date';
-  date.textContent = new Date(a.created_at).toLocaleDateString('ko-KR', { year:'2-digit', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) + ' 가입';
-
-  info.appendChild(nameRow); info.appendChild(meta); info.appendChild(date);
+  status.appendChild(statusBadge);
 
   const actions = document.createElement('div');
   actions.className = 'account-actions';
@@ -534,8 +535,13 @@ function buildAccountCard(a) {
   resetBtn.onclick = () => openPwReset(a);
   actions.appendChild(approveBtn); actions.appendChild(rejectBtn); actions.appendChild(resetBtn);
 
-  card.appendChild(info); card.appendChild(actions);
-  return card;
+  row.appendChild(cell('account-name', a.name));
+  row.appendChild(cell('account-code', a.agency_code));
+  row.appendChild(cell('account-meta', a.agency_name));
+  row.appendChild(cell('account-date', date));
+  row.appendChild(status);
+  row.appendChild(actions);
+  return row;
 }
 
 async function setAccountStatus(id, status) {

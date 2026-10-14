@@ -37,7 +37,10 @@
 
 <div class="content" id="pane-list">
   <div class="list-header">
-    <input type="text" id="notice-search" class="search-input" placeholder="제목 또는 내용 검색" oninput="filterNotices(this.value)">
+    <div class="search-wrap">
+      <svg><use href="#i-search"></use></svg>
+      <input type="text" id="notice-search" class="search-input" placeholder="제목 또는 내용 검색" aria-label="공지 검색" oninput="filterNotices(this.value)">
+    </div>
     <button class="refresh-btn" onclick="loadList()"><svg><use href="#i-refresh"></use></svg>새로고침</button>
   </div>
   <div class="table-wrap">

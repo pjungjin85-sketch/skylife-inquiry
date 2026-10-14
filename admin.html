@@ -96,7 +96,10 @@
     </div>
 
     <div class="search-bar">
-      <input type="text" id="notice-search" placeholder="제목 또는 내용 검색" oninput="setNoticeSearch(this.value)">
+      <div class="search-wrap">
+        <svg><use href="#i-search"></use></svg>
+        <input type="text" id="notice-search" class="search-input" placeholder="제목 또는 내용 검색" aria-label="제목 또는 내용 검색" oninput="setNoticeSearch(this.value)">
+      </div>
     </div>
     <div class="list-header">
       <span class="list-count" id="notice-count"></span>
@@ -107,7 +110,10 @@
 
   <div id="tab-accounts" class="main-tab-content">
     <div class="search-bar">
-      <input type="text" id="account-search" placeholder="계정(이메일) 또는 이름 검색" oninput="setAccountSearch(this.value)">
+      <div class="search-wrap">
+        <svg><use href="#i-search"></use></svg>
+        <input type="text" id="account-search" class="search-input" placeholder="계정(이메일) 또는 이름 검색" aria-label="계정(이메일) 또는 이름 검색" oninput="setAccountSearch(this.value)">
+      </div>
     </div>
     <div class="filter-bar">
       <button class="filter-btn active" data-afilter="all" onclick="setAccountFilter('all')">전체</button>

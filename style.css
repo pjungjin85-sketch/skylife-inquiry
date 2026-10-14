@@ -37,14 +37,10 @@ body{background:var(--bg2);}
   display:flex;align-items:center;justify-content:space-between;
   gap:var(--s-2);margin-bottom:var(--s-4);flex-wrap:wrap;
 }
-.search-input,.search-bar{
-  flex:1;min-width:170px;max-width:280px;
-  padding:9px 13px;border:1px solid var(--border);border-radius:var(--r-md);
-  font-size:var(--t-sm);color:var(--black);background:var(--bg);outline:none;
-  transition:border-color var(--dur-fast) var(--ease);
-}
-.search-input:focus,.search-bar:focus{border-color:var(--black);}
-.search-input::placeholder,.search-bar::placeholder{color:var(--light);}
+/* 검색창 모양은 base.css의 .search-wrap/.search-input을 그대로 쓴다 */
+.search-bar{display:flex;margin-bottom:var(--s-3);}
+/* 공지사항 목록: 검색창과 새로고침 버튼이 모바일에서도 한 줄에 */
+.list-header .search-wrap{flex:1 1 0;min-width:0;}
 .refresh-btn{
   padding:8px 14px;border:1px solid var(--border);border-radius:var(--r-md);
   font-size:var(--t-xs);font-weight:600;color:var(--mid);background:var(--bg);
@@ -208,7 +204,8 @@ body{background:var(--bg2);}
 /* ============================================================
    관리자 — 회원 승인
    ============================================================ */
-.filter-bar{display:flex;gap:6px;margin-bottom:var(--s-4);flex-wrap:wrap;}
+.filter-bar{display:flex;gap:var(--s-4);margin-bottom:var(--s-4);flex-wrap:wrap;border-bottom:1px solid var(--border);}
+.filter-bar .filter-btn{margin-bottom:-1px;}
 .account-card{
   background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);
   padding:var(--s-4) var(--s-5);margin-bottom:var(--s-2);
@@ -359,10 +356,12 @@ body{background:var(--bg2);}
   .form-row{grid-template-columns:1fr;}
   .detail-card{padding:var(--s-5) var(--s-4);}
   .detail-title{font-size:18px;}
-  .search-input,.search-bar{max-width:100%;}
+  .search-wrap{max-width:100%;}
   .account-card{padding:var(--s-4);}
   .account-actions{width:100%;}
   .account-btn{flex:1;text-align:center;}
+  /* 승인·정지 두 칸, 비밀번호 초기화는 아래 한 줄 전체 — 글자가 두 줄로 꺾이지 않게 */
+  .account-btn.reset{flex-basis:100%;}
   .main-tab-bar{gap:var(--s-4);}
 }
 

@@ -266,22 +266,20 @@ body.page-admin{background:var(--bg);}
    ============================================================ */
 .filter-bar{display:flex;gap:var(--s-4);margin-bottom:var(--s-4);flex-wrap:wrap;border-bottom:1px solid var(--border);}
 .filter-bar .filter-btn{margin-bottom:-1px;}
-.account-list{
-  border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;background:var(--bg);
-}
+.account-list{border-top:1px solid var(--dark);border-bottom:1px solid var(--border);}
 /* 이름 · 대리점코드 · 소속 · 가입일 · 상태 · 관리 */
 .account-row{
   display:grid;
   grid-template-columns:minmax(80px,1fr) minmax(90px,1fr) minmax(110px,1.4fr) 90px 80px 220px;
   align-items:center;column-gap:var(--s-4);
-  padding:var(--s-3) var(--s-5);
+  padding:var(--s-3) var(--s-2);
   border-top:1px solid var(--border);
   font-size:var(--t-sm);
 }
 .account-row:first-child{border-top:none;}
 .account-row:not(.account-head):hover{background:var(--bg3);}
 .account-head{
-  background:var(--bg2);padding-top:10px;padding-bottom:10px;
+  padding-top:10px;padding-bottom:10px;
   font-size:var(--t-xs);font-weight:600;color:var(--light);
 }
 .account-head span:last-child{text-align:right;}
@@ -291,6 +289,11 @@ body.page-admin{background:var(--bg);}
 .account-date{font-size:var(--t-xs);color:var(--light);font-variant-numeric:tabular-nums;}
 .account-row>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .account-actions{display:flex;gap:6px;justify-content:flex-end;}
+/* 상태는 상자 없이 글자로만 — 처리해야 할 '승인대기'만 눈에 띄게 */
+.account-status{font-size:var(--t-sm);font-weight:600;}
+.account-status.pending{color:var(--warn);}
+.account-status.approved{color:var(--dark);font-weight:500;}
+.account-status.rejected{color:var(--light);font-weight:500;}
 .account-btn{
   padding:6px 12px;border:1px solid var(--border);border-radius:var(--r-sm);white-space:nowrap;
   font-size:var(--t-xs);font-weight:600;cursor:pointer;background:var(--bg);color:var(--mid);
@@ -438,7 +441,7 @@ body.page-admin{background:var(--bg);}
   .account-row{
     grid-template-columns:auto 1fr auto;
     grid-template-areas:"name code status" "meta date date" "act act act";
-    row-gap:4px;column-gap:var(--s-2);padding:var(--s-3) var(--s-4);
+    row-gap:4px;column-gap:var(--s-2);padding:var(--s-3) 0;
   }
   .account-row:nth-child(2){border-top:none;}
   .account-name{grid-area:name;}

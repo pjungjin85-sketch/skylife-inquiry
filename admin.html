@@ -510,11 +510,9 @@ function buildAccountRow(a) {
   const date = new Date(a.created_at).toLocaleDateString('ko-KR', { year:'2-digit', month:'2-digit', day:'2-digit' });
 
   const status = document.createElement('span');
-  status.className = 'account-status';
-  const statusBadge = document.createElement('span');
-  statusBadge.className = 'status-badge ' + (a.status === 'approved' ? 'answered' : a.status === 'rejected' ? 'rejected' : 'pending');
-  statusBadge.textContent = a.status === 'approved' ? '승인됨' : a.status === 'rejected' ? '정지됨' : '승인대기';
-  status.appendChild(statusBadge);
+  const st = a.status === 'approved' || a.status === 'rejected' ? a.status : 'pending';
+  status.className = 'account-status ' + st;
+  status.textContent = { approved: '승인됨', rejected: '정지됨', pending: '승인대기' }[st];
 
   const actions = document.createElement('div');
   actions.className = 'account-actions';

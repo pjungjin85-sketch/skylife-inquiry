@@ -44,6 +44,8 @@ create table if not exists public.bot_query_logs (
 alter table public.bot_query_logs add column if not exists bot text not null default 'main';
 alter table public.bot_query_logs add column if not exists resolved_at timestamptz;
 alter table public.bot_query_logs add column if not exists resolved_note text;
+-- 관리자가 '삭제'한 질문 (목록에서만 빼고 기록은 남긴다 — 질문 통계용, 되살리기 가능)
+alter table public.bot_query_logs add column if not exists dismissed_at timestamptz;
 
 create index if not exists bot_query_logs_asked_at_idx on public.bot_query_logs (asked_at desc);
 create index if not exists bot_query_logs_found_idx on public.bot_query_logs (found, asked_at desc);
@@ -98,13 +100,18 @@ as $$
 $$;
 
 drop function if exists public.admin_list_unanswered(integer, boolean);
-create function public.admin_list_unanswered(days integer default 30, include_resolved boolean default false)
+drop function if exists public.admin_list_unanswered(integer, boolean, boolean);
+-- show_dismissed = true 면 삭제한 질문만, false 면 삭제 안 한 질문만
+create function public.admin_list_unanswered(
+  days integer default 30, include_resolved boolean default false, show_dismissed boolean default false
+)
 returns table (
   query text, ask_count bigint, last_asked timestamptz, routes text,
   askers text,        -- 사람별 횟수: "박정진 (본사) 2회, 송재혁 (무선사업팀) 1회"
   resolved_at timestamptz, resolved_note text,
   bots text,          -- 어느 봇에서 나온 질문인지 (main=운영, personal=노트북 개인 봇)
-  first_asked timestamptz
+  first_asked timestamptz,
+  dismissed_at timestamptz
 )
 language plpgsql security definer set search_path = public
 as $$
@@ -134,14 +141,38 @@ begin
            max(b.resolved_at),
            max(b.resolved_note),
            string_agg(distinct b.bot, ','),
-           min(b.asked_at)
+           min(b.asked_at),
+           max(b.dismissed_at)
     from base b
     group by b.k
-    having include_resolved or max(b.resolved_at) is null
-    order by max(b.resolved_at) nulls first, max(b.asked_at) desc
+    -- 한 번 삭제한 질문은 같은 질문이 또 들어와도 다시 올리지 않는다 (처리 완료와 같은 방식)
+    having (max(b.dismissed_at) is not null) = show_dismissed
+       and (show_dismissed or include_resolved or max(b.resolved_at) is null)
+    order by max(b.dismissed_at) desc nulls last, max(b.resolved_at) nulls first, max(b.asked_at) desc
     limit 300;
 end;
 $$;
+
+-- 삭제(목록에서 빼기) / 되살리기 — 같은 질문(정규화 기준) 전체에 적용. 여러 개를 한 번에.
+create or replace function public.admin_dismiss_queries(qs text[], dismiss boolean default true)
+returns integer
+language plpgsql security definer set search_path = public
+as $$
+declare n integer;
+begin
+  if not exists (select 1 from public.profiles where id = auth.uid() and is_admin) then
+    raise exception 'unauthorized';
+  end if;
+  update public.bot_query_logs l
+     set dismissed_at = case when dismiss then now() else null end
+   where public.bot_norm_query(l.query) in (select public.bot_norm_query(x) from unnest(qs) x)
+     and (l.dismissed_at is null) = dismiss;
+  get diagnostics n = row_count;
+  return n;
+end;
+$$;
+revoke all on function public.admin_dismiss_queries(text[], boolean) from public, anon;
+grant execute on function public.admin_dismiss_queries(text[], boolean) to authenticated;
 
 -- 처리 완료 표시 (같은 질문 전체). note 에 "FAQ 추가" 같은 메모
 create or replace function public.admin_resolve_query(q text, note text default null)
@@ -159,7 +190,7 @@ end;
 $$;
 
 grant execute on function public.admin_list_accounts() to authenticated;
-grant execute on function public.admin_list_unanswered(integer, boolean) to authenticated;
+grant execute on function public.admin_list_unanswered(integer, boolean, boolean) to authenticated;
 grant execute on function public.admin_resolve_query(text, text) to authenticated;
 
 

@@ -80,11 +80,13 @@ let unansweredLoaded = false;
 let unansweredDays = 30;
 let unansweredShowResolved = false;
 let unansweredPage = 1;
+let unansweredShowDismissed = false;   // true = 삭제한 질문만 보기
+const unansweredSelected = new Set();  // 체크한 질문 (페이지를 넘겨도 유지)
 
 async function loadUnanswered() {
   setUnansweredLoading('불러오는 중...');
   const { data, error } = await sb.rpc('admin_list_unanswered', {
-    days: unansweredDays, include_resolved: unansweredShowResolved,
+    days: unansweredDays, include_resolved: unansweredShowResolved, show_dismissed: unansweredShowDismissed,
   });
   if (error) {
     const m = error.message || '';
@@ -95,6 +97,7 @@ async function loadUnanswered() {
   }
   unanswered = data || [];
   unansweredLoaded = true;
+  unansweredSelected.clear();
   renderUnanswered();
 }
 
@@ -111,22 +114,35 @@ function toggleUnansweredResolved(on) {
   loadUnanswered();
 }
 
+function toggleUnansweredDismissed(on) {
+  unansweredShowDismissed = on;
+  unansweredPage = 1;
+  // 삭제한 질문 보기에서는 처리 완료 구분이 의미 없어 체크를 숨긴다
+  document.getElementById('uq-resolved-toggle').style.display = on ? 'none' : '';
+  loadUnanswered();
+}
+
 function renderUnanswered() {
   const open = unanswered.filter(r => !r.resolved_at).length;
-  document.getElementById('unanswered-count').textContent =
-    '미처리 ' + open + '건' + (unansweredShowResolved ? ' · 처리 완료 ' + (unanswered.length - open) + '건' : '');
+  document.getElementById('unanswered-count').textContent = unansweredShowDismissed
+    ? '삭제한 질문 ' + unanswered.length + '건'
+    : '미처리 ' + open + '건' + (unansweredShowResolved ? ' · 처리 완료 ' + (unanswered.length - open) + '건' : '');
   const c = document.getElementById('unanswered-list-container');
   c.textContent = '';
   if (!unanswered.length) {
     c.innerHTML = '<div class="empty"><div class="empty-icon"><svg><use href="#i-inbox"></use></svg></div>' +
-      '<div class="empty-text">최근 ' + unansweredDays + '일간 자료가 없어 답하지 못한 질문이 없습니다.</div></div>';
+      '<div class="empty-text">' + (unansweredShowDismissed
+        ? '최근 ' + unansweredDays + '일간 삭제한 질문이 없습니다.'
+        : '최근 ' + unansweredDays + '일간 자료가 없어 답하지 못한 질문이 없습니다.') + '</div></div>';
     return;
   }
   unansweredPage = clampPage(unansweredPage, unanswered.length);
   const from = (unansweredPage - 1) * PAGE_SIZE;
+  const pageRows = unanswered.slice(from, from + PAGE_SIZE);
+  c.appendChild(buildSelectBar(pageRows));
   const list = document.createElement('div');
   list.className = 'uq-list';
-  unanswered.slice(from, from + PAGE_SIZE).forEach(r => list.appendChild(buildUnansweredRow(r)));
+  pageRows.forEach(r => list.appendChild(buildUnansweredRow(r)));
   c.appendChild(list);
   const pager = buildPager(unanswered.length, unansweredPage, p => {
     unansweredPage = p; renderUnanswered(); scrollListTop('unanswered-list-container');
@@ -136,7 +152,18 @@ function renderUnanswered() {
 
 function buildUnansweredRow(r) {
   const row = document.createElement('div');
-  row.className = 'uq-row' + (r.resolved_at ? ' resolved' : '');
+  row.className = 'uq-row' + (r.resolved_at || r.dismissed_at ? ' resolved' : '');
+
+  const pick = document.createElement('input');
+  pick.type = 'checkbox';
+  pick.className = 'uq-pick';
+  pick.checked = unansweredSelected.has(r.query);
+  pick.setAttribute('aria-label', '선택: ' + r.query);
+  pick.onchange = () => {
+    if (pick.checked) unansweredSelected.add(r.query); else unansweredSelected.delete(r.query);
+    updateSelectBar();
+  };
+  row.appendChild(pick);
 
   const main = document.createElement('div');
   main.className = 'uq-main';
@@ -152,7 +179,12 @@ function buildUnansweredRow(r) {
   meta.textContent = kinds + ' · ' + r.ask_count + '회 · 마지막 ' + last +
     (bots ? ' · ' + bots : '') + (r.askers ? ' · ' + r.askers : '');
   main.appendChild(q); main.appendChild(meta);
-  if (r.resolved_at) {
+  if (r.dismissed_at) {
+    const done = document.createElement('div');
+    done.className = 'uq-done dismissed';
+    done.textContent = '삭제함 ' + new Date(r.dismissed_at).toLocaleDateString('ko-KR');
+    main.appendChild(done);
+  } else if (r.resolved_at) {
     const done = document.createElement('div');
     done.className = 'uq-done';
     done.textContent = '처리 완료 ' + new Date(r.resolved_at).toLocaleDateString('ko-KR') + (r.resolved_note ? ' — ' + r.resolved_note : '');
@@ -161,7 +193,13 @@ function buildUnansweredRow(r) {
 
   const act = document.createElement('div');
   act.className = 'uq-actions';
-  if (!r.resolved_at) {
+  if (r.dismissed_at) {
+    const back = document.createElement('button');
+    back.className = 'account-btn';
+    back.textContent = '되살리기';
+    back.onclick = () => dismissUnanswered([r.query], false, back);
+    act.appendChild(back);
+  } else if (!r.resolved_at) {
     // 답변을 쓰면 FAQ 에 등록되고 이 질문은 처리 완료로 (admin-faq.js)
     const reg = document.createElement('button');
     reg.className = 'account-btn primary';
@@ -174,8 +212,70 @@ function buildUnansweredRow(r) {
     btn.onclick = () => resolveUnanswered(r, btn);
     act.appendChild(btn);
   }
+  if (!r.dismissed_at) {
+    const del = document.createElement('button');
+    del.className = 'account-btn reject';
+    del.textContent = '삭제';
+    del.onclick = () => dismissUnanswered([r.query], true, del);
+    act.appendChild(del);
+  }
   row.appendChild(main); row.appendChild(act);
   return row;
+}
+
+/* 선택 막대: [이 페이지 전체 선택] N개 선택 [선택 삭제 / 선택 되살리기] */
+function buildSelectBar(pageRows) {
+  const bar = document.createElement('div');
+  bar.className = 'uq-select-bar';
+  bar.id = 'uq-select-bar';
+  const all = document.createElement('label');
+  all.className = 'checkbox-label';
+  const box = document.createElement('input');
+  box.type = 'checkbox';
+  box.id = 'uq-pick-page';
+  box.onchange = () => {
+    pageRows.forEach(r => { if (box.checked) unansweredSelected.add(r.query); else unansweredSelected.delete(r.query); });
+    document.querySelectorAll('#unanswered-list-container .uq-pick').forEach(p => { p.checked = box.checked; });
+    updateSelectBar();
+  };
+  const t = document.createElement('span');
+  t.textContent = '이 페이지 전체 선택';
+  all.append(box, t);
+  const count = document.createElement('span');
+  count.className = 'list-count';
+  count.id = 'uq-pick-count';
+  const go = document.createElement('button');
+  go.id = 'uq-pick-btn';
+  go.className = 'account-btn ' + (unansweredShowDismissed ? '' : 'reject');
+  go.textContent = unansweredShowDismissed ? '선택 되살리기' : '선택 삭제';
+  go.onclick = () => dismissUnanswered([...unansweredSelected], !unansweredShowDismissed, go);
+  bar.append(all, count, go);
+  bar._pageRows = pageRows;
+  setTimeout(updateSelectBar);
+  return bar;
+}
+
+function updateSelectBar() {
+  const bar = document.getElementById('uq-select-bar');
+  if (!bar) return;
+  const n = unansweredSelected.size;
+  document.getElementById('uq-pick-count').textContent = n ? n + '개 선택' : '';
+  document.getElementById('uq-pick-btn').disabled = !n;
+  const rows = bar._pageRows || [];
+  document.getElementById('uq-pick-page').checked = rows.length > 0 && rows.every(r => unansweredSelected.has(r.query));
+}
+
+// 삭제 = 목록에서만 뺀다 (기록은 남음, 같은 질문이 또 와도 다시 안 올라옴). dismiss=false 면 되살리기
+async function dismissUnanswered(queries, dismiss, btn) {
+  if (!queries.length) return;
+  const ask = dismiss
+    ? queries.length + '개 질문을 목록에서 삭제할까요?\n기록은 남고, 「삭제한 질문 보기」에서 되살릴 수 있습니다.\n같은 질문이 또 들어와도 다시 올라오지 않습니다.'
+    : queries.length + '개 질문을 미해결 목록으로 되살릴까요?';
+  if (!confirm(ask)) return;
+  btn.disabled = true;
+  const { error } = await sb.rpc('admin_dismiss_queries', { qs: queries, dismiss });
+  if (error) { alert('처리 실패: ' + (error.message || '')); btn.disabled = false; return; }
+  loadUnanswered();
 }
 
 async function resolveUnanswered(r, btn) {

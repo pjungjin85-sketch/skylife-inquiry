@@ -488,5 +488,40 @@ body.page-admin{background:var(--bg);}
 .uq-done{font-size:var(--t-xs);color:var(--ok);margin-top:4px;}
 .uq-row.resolved .uq-query{color:var(--light);font-weight:500;}
 .uq-actions{flex:0 0 auto;}
+/* 등록한 답변 (admin-faq.js) — 목록은 uq-* 를 같이 쓴다 */
+.fa-new{margin-left:auto;}
+.fa-row{align-items:flex-start;}
+.fa-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px;}
+.fa-cat{flex:0 0 auto;font-size:11px;font-weight:700;color:var(--mid);background:var(--bg2);border-radius:3px;padding:2px 6px;}
+.fa-hidden{flex:0 0 auto;font-size:11px;font-weight:700;color:var(--red);background:var(--red-light);border-radius:3px;padding:2px 6px;}
+.fa-answer{
+  font-size:var(--t-xs);color:var(--dark);line-height:1.7;margin-top:6px;white-space:pre-line;
+  overflow-wrap:anywhere;cursor:pointer;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.fa-answer.open{display:block;cursor:auto;}
+.fa-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;}
+.uq-actions{display:flex;gap:6px;}
+.fa-modal{max-width:560px;max-height:calc(100vh - 40px);overflow-y:auto;}
+.fa-modal .pw-target{white-space:pre-line;background:var(--bg2);border-radius:var(--r-md);padding:9px 12px;}
+.fa-modal .pw-label{margin-top:var(--s-3);}
+.fa-modal .pw-note{white-space:pre-line;}
+.fa-input{
+  display:block;width:100%;padding:10px 12px;font:inherit;font-size:var(--t-sm);color:var(--black);
+  border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg);outline:none;
+}
+.fa-input:focus{border-color:var(--black);}
+.fa-textarea{resize:vertical;min-height:160px;line-height:1.7;}
+.fa-hist-item{border-top:1px solid var(--border);padding:var(--s-3) 0;}
+.fa-hist-item:first-child{border-top:none;padding-top:0;}
+.fa-hist-item .account-btn{margin-top:var(--s-2);}
+@media(max-width:400px){
+  .main-tab-bar{gap:var(--s-3);}  /* 탭 4개가 360px 폭에 한 줄로 들어가게 */
+}
+@media(max-width:768px){
+  .fa-row{flex-direction:column;align-items:stretch;}
+  .fa-actions{justify-content:flex-start;}
+}
+
 /* 일러스트 없는 섹션 머리도 설명을 제목 아래 줄에 (봇 미해결 질문) */
 .section-head-text .section-note{margin-left:0;flex-basis:100%;white-space:normal;}

@@ -1,7 +1,7 @@
 /* ══════════════════════════════════════════════════════════════
    관리자 — 업무지원 텔레그램 봇 연동
    1) 회원 목록의 '텔레그램 ID' 칸: 직원이 가이드에서 연결한 ID 표시 (읽기 전용)
-   2) '봇 미해결 질문' 탭: 봇이 자료가 없어 답하지 못한 질문 → KB 보강 후 처리 완료
+   2) '봇 미해결 질문' 탭: 봇이 자료가 없어 답하지 못한 질문 → 「답변 등록」(admin-faq.js) 또는 처리 완료
    DB 함수는 schema_bot.sql 참고. admin.html 의 sb / escapeHtml 을 쓴다.
    ══════════════════════════════════════════════════════════════ */
 
@@ -113,6 +113,12 @@ function buildUnansweredRow(r) {
   const act = document.createElement('div');
   act.className = 'uq-actions';
   if (!r.resolved_at) {
+    // 답변을 쓰면 FAQ 에 등록되고 이 질문은 처리 완료로 (admin-faq.js)
+    const reg = document.createElement('button');
+    reg.className = 'account-btn primary';
+    reg.textContent = '답변 등록';
+    reg.onclick = () => openFaqEditor({ q: r.query.replace(/[?？!.~\s]+$/, ''), source_query: r.query });
+    act.appendChild(reg);
     const btn = document.createElement('button');
     btn.className = 'account-btn approve';
     btn.textContent = '처리 완료';

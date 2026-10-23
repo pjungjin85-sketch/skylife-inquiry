@@ -12,6 +12,7 @@
 <script src="line-draw.js"></script>
 <script src="bi-intro.js"></script>
 <script src="admin-bot.js"></script>
+<script src="admin-faq.js"></script>
 </head>
 <body class="page-admin">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
@@ -61,6 +62,7 @@
     <button class="main-tab-btn active" data-tab="notices" onclick="switchMainTab('notices')">공지사항 관리</button>
     <button class="main-tab-btn" data-tab="accounts" onclick="switchMainTab('accounts')">회원 승인</button>
     <button class="main-tab-btn" data-tab="unanswered" onclick="switchMainTab('unanswered')">봇 미해결 질문</button>
+    <button class="main-tab-btn" data-tab="faq" onclick="switchMainTab('faq')">등록한 답변</button>
   </div>
 
   <div id="tab-notices" class="main-tab-content active">
@@ -150,7 +152,7 @@
       <div class="section-head-text">
         <span class="section-num">03</span>
         <h2>봇 미해결 질문</h2>
-        <span class="section-note">자료가 없어 답하지 못한 질문 · 웹페이지에 내용 등록 후 처리 완료</span>
+        <span class="section-note">자료가 없어 답하지 못한 질문 · 「답변 등록」하면 FAQ에 올라가고 처리 완료</span>
       </div>
     </div>
     <div class="filter-bar">
@@ -165,6 +167,33 @@
       <button class="refresh-btn" onclick="loadUnanswered()"><svg><use href="#i-refresh"></use></svg>새로고침</button>
     </div>
     <div id="unanswered-list-container"></div>
+  </div>
+
+  <div id="tab-faq" class="main-tab-content">
+    <div class="section-head">
+      <div class="section-head-text">
+        <span class="section-num">04</span>
+        <h2>등록한 답변</h2>
+        <span class="section-note">FAQ 화면에 바로 보이고 봇은 다음 날 아침부터 반영 · 지우지 않고 숨김 · 수정 이력 보관</span>
+      </div>
+    </div>
+    <div class="search-bar">
+      <div class="search-wrap">
+        <svg><use href="#i-search"></use></svg>
+        <input type="text" class="search-input" placeholder="질문·답변 검색" aria-label="질문·답변 검색" oninput="setFaqSearch(this.value)">
+      </div>
+    </div>
+    <div class="filter-bar">
+      <button class="filter-btn active" data-ffilter="visible" onclick="setFaqFilter('visible')">보이는 답변</button>
+      <button class="filter-btn" data-ffilter="hidden" onclick="setFaqFilter('hidden')">숨김</button>
+      <button class="filter-btn" data-ffilter="all" onclick="setFaqFilter('all')">전체</button>
+    </div>
+    <div class="list-header">
+      <span class="list-count" id="faq-count"></span>
+      <button class="refresh-btn fa-new" onclick="openFaqEditor({})">새 답변 추가</button>
+      <button class="refresh-btn" onclick="loadFaqAnswers()"><svg><use href="#i-refresh"></use></svg>새로고침</button>
+    </div>
+    <div id="faq-list-container"></div>
   </div>
 </div>
 
@@ -297,8 +326,10 @@ function switchMainTab(tab) {
   document.getElementById('tab-notices').classList.toggle('active', tab === 'notices');
   document.getElementById('tab-accounts').classList.toggle('active', tab === 'accounts');
   document.getElementById('tab-unanswered').classList.toggle('active', tab === 'unanswered');
+  document.getElementById('tab-faq').classList.toggle('active', tab === 'faq');
   if (tab === 'accounts' && !accountsLoaded) loadAccounts();
   if (tab === 'unanswered' && !unansweredLoaded) loadUnanswered();
+  if (tab === 'faq' && !faqLoaded) loadFaqAnswers();
 }
 
 /* ── 공지 작성/수정 ── */

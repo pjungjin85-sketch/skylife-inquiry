@@ -166,9 +166,11 @@ grant execute on function public.admin_resolve_query(text, text) to authenticate
 -- ══════════════════════════════════════════════════════════════
 -- 4. 직원 본인이 텔레그램 연결 (현장영업 가이드 메인 화면, 로그아웃 옆)
 --   승인된 계정만 자기 계정에 텔레그램 ID 를 넣거나 해제할 수 있다.
---   다른 계정이 이미 쓰는 ID 는 거부한다 (옮기려면 관리자 페이지에서).
+--   다른 '승인된' 계정이 쓰는 ID 는 거부한다. 승인 대기·정지 계정이 쥐고 있는 ID 는 가져온다.
 --   본인 확인은 없다 — 남의 ID 를 넣는 위험은 가이드 비밀번호를 남에게 알려주는 것과
---   같은 수준이라 별도 인증은 두지 않았다. 관리자는 회원 목록에서 언제든 확인·해제.
+--   같은 수준이라 별도 인증은 두지 않았다.
+--   남의 ID 를 선점한 계정이 있으면 관리자가 그 계정을 '정지' → 연결이 자동 해제되고
+--   (admin_set_status) 진짜 주인이 다시 연결할 수 있다.
 -- ══════════════════════════════════════════════════════════════
 drop function if exists public.create_telegram_link_code();
 drop function if exists public.claim_telegram_link(text, bigint);
@@ -186,9 +188,11 @@ begin
   if tg_id is null or tg_id <= 0 then
     raise exception 'invalid telegram id';
   end if;
-  if exists (select 1 from public.profiles where telegram_id = tg_id and id <> auth.uid()) then
+  if exists (select 1 from public.profiles
+             where telegram_id = tg_id and id <> auth.uid() and status = 'approved') then
     raise exception 'telegram id already used';
   end if;
+  update public.profiles set telegram_id = null where telegram_id = tg_id and id <> auth.uid();
   update public.profiles set telegram_id = tg_id where id = auth.uid();
 end;
 $$;
@@ -207,3 +211,24 @@ revoke all on function public.set_my_telegram_id(bigint) from public, anon;
 grant execute on function public.set_my_telegram_id(bigint) to authenticated;
 revoke all on function public.unlink_my_telegram() from public, anon;
 grant execute on function public.unlink_my_telegram() to authenticated;
+
+
+-- 승인 해제(정지·대기)되면 텔레그램 연결도 푼다 — 선점된 ID 를 관리자가 정지로 풀어줄 수 있게
+create or replace function public.admin_set_status(account_id uuid, new_status text)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if not exists (select 1 from public.profiles where id = auth.uid() and is_admin) then
+    raise exception 'unauthorized';
+  end if;
+  if new_status not in ('pending','approved','rejected') then
+    raise exception 'invalid status';
+  end if;
+  update public.profiles
+     set status = new_status,
+         telegram_id = case when new_status = 'approved' then telegram_id else null end
+   where id = account_id;
+end;
+$$;
+grant execute on function public.admin_set_status(uuid, text) to authenticated;

@@ -28,8 +28,14 @@ create policy "select own profile" on public.profiles
   for select using (auth.uid() = id);
 
 drop policy if exists "insert own profile" on public.profiles;
+-- telegram_id 는 schema_bot.sql 에서 추가된다. 이 파일을 먼저 실행하는 경우를 위해 같이 둔다.
+alter table public.profiles add column if not exists telegram_id bigint;
 create policy "insert own profile" on public.profiles
-  for insert with check (auth.uid() = id and status = 'pending');
+  for insert with check (
+    auth.uid() = id and status = 'pending'
+    -- 가입 시 스스로 관리자·텔레그램 연결을 넣지 못하게 (관리자 RPC 로만 변경)
+    and is_admin = false and telegram_id is null
+  );
 
 -- 2. 관리자용 RPC — 로그인한 사용자(auth.uid())가 profiles.is_admin = true 인지로 게이트.
 --    비밀번호 파라미터 없음. 반드시 로그인(=authenticated) 상태에서만 호출 가능.

@@ -15,6 +15,18 @@ alter table public.profiles add column if not exists telegram_id bigint;
 create unique index if not exists profiles_telegram_id_key
   on public.profiles (telegram_id) where telegram_id is not null;
 
+-- 가입 정책 강화: 예전 정책은 status 만 검사해서 가입하면서 is_admin = true 를 넣으면
+-- 바로 관리자 RPC 를 쓸 수 있었다. telegram_id 도 스스로 넣지 못하게 한다.
+drop policy if exists "insert own profile" on public.profiles;
+create policy "insert own profile" on public.profiles
+  for insert with check (
+    auth.uid() = id and status = 'pending'
+    -- 가입 시 스스로 관리자·텔레그램 연결을 넣지 못하게 (관리자 RPC 로만 변경)
+    and is_admin = false and telegram_id is null
+  );
+-- 수정 정책은 없지만(=수정 불가) 방어적으로 직접 UPDATE 권한도 회수한다
+revoke update on public.profiles from anon, authenticated;
+
 
 -- 2. 봇 질문 로그
 create table if not exists public.bot_query_logs (

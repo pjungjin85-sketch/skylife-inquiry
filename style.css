@@ -463,6 +463,8 @@ body.page-admin{background:var(--bg);}
   .account-last::before{content:'접속 ';}
   .account-row .account-tg{grid-area:tg;font-size:var(--t-xs);margin-top:2px;}
   .account-row .account-tg::before{content:'텔레그램';margin-right:5px;color:var(--light);text-decoration:none;display:inline-block;}
+  /* 이름·소속이 길면 잘라내지 말고 다음 줄로 */
+  .account-row>span.account-name,.account-row>span.account-meta{white-space:normal;overflow-wrap:anywhere;}
 }
 
 /* 목록 '내용' 열 · 체크박스 전용 폼 그룹 */
@@ -555,6 +557,8 @@ body.page-admin{background:var(--bg);}
   }
   .main-tab-bar::-webkit-scrollbar{display:none;}
   .main-tab-btn{margin-bottom:0;flex:0 0 auto;}
+  /* 옆에 탭이 더 있다는 표시 — 오른쪽 끝을 흐리게 */
+  .main-tab-bar{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);padding-right:28px;}
 }
 @media(max-width:768px){
   /* 미해결 질문: 버튼을 질문 아래 줄로 (체크박스 폭만큼 들여서) */

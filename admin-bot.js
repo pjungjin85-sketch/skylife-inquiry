@@ -7,7 +7,7 @@
 
 /* ── 0. 최근 접속 (회원 목록) ── */
 function formatLastSeen(ts) {
-  if (!ts) return '접속 기록 없음';
+  if (!ts) return '기록 없음';  // 모바일은 앞에 '접속 ' 라벨이 붙는다 (style.css)
   const d = new Date(ts);
   const now = new Date();
   const hm = d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });

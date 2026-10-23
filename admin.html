@@ -353,7 +353,7 @@ async function checkSession() {
 function switchMainTab(tab) {
   document.querySelectorAll('.main-tab-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.tab === tab);
-    if (b.dataset.tab === tab) b.scrollIntoView({ block: 'nearest', inline: 'nearest' });  // 좁은 화면에서 탭 줄이 옆으로 넘어갈 때
+    if (b.dataset.tab === tab) b.scrollIntoView({ block: 'nearest', inline: 'center' });  // 좁은 화면에서 탭 줄이 옆으로 넘어갈 때 — 고른 탭을 가운데로
   });
   document.getElementById('tab-notices').classList.toggle('active', tab === 'notices');
   document.getElementById('tab-accounts').classList.toggle('active', tab === 'accounts');

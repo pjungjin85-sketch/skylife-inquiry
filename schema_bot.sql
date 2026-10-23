@@ -102,6 +102,18 @@ $$;
 --   no_result    : 관련 자료를 찾지 못함
 --   clarify_nohit: 근거가 없어 되물음
 --   llm_general  : KB 대신 일반 상식으로 답함 (KB 보강 후보)
+-- 같은 질문 묶기용 정규화: 앞의 목록 기호(- • *), 끝의 물음표·마침표, 띄어쓰기 차이를 무시
+--   "- 명의변경 서류 뭐 필요해?" = "명의변경 서류 뭐 필요해" = "명의변경  서류 뭐 필요해 ?"
+create or replace function public.bot_norm_query(q text)
+returns text language sql immutable
+as $$
+  select regexp_replace(
+           regexp_replace(
+             regexp_replace(lower(trim(coalesce(q, ''))), '^[-•*·>\s]+', ''),
+           '[?？!.~\s]+$', ''),
+         '\s+', '', 'g')
+$$;
+
 drop function if exists public.admin_list_unanswered(integer, boolean);
 create function public.admin_list_unanswered(days integer default 30, include_resolved boolean default false)
 returns table (
@@ -116,7 +128,7 @@ begin
     raise exception 'unauthorized';
   end if;
   return query
-    select l.query,
+    select (array_agg(regexp_replace(l.query, '^[-•*·>\s]+', '') order by l.asked_at desc))[1],  -- 대표 문구: 가장 최근 표현
            count(*)::bigint,
            max(l.asked_at),
            string_agg(distinct l.route, ','),
@@ -129,7 +141,7 @@ begin
     where l.found = false
       and l.route in ('no_coverage', 'no_result', 'clarify_nohit', 'llm_general')
       and l.asked_at > now() - make_interval(days => days)
-    group by l.query
+    group by public.bot_norm_query(l.query)
     having include_resolved or max(l.resolved_at) is null
     order by max(l.resolved_at) nulls first, max(l.asked_at) desc
     limit 300;
@@ -147,7 +159,7 @@ begin
   end if;
   update public.bot_query_logs
      set resolved_at = now(), resolved_note = nullif(trim(note), '')
-   where query = q and resolved_at is null;
+   where public.bot_norm_query(query) = public.bot_norm_query(q) and resolved_at is null;
 end;
 $$;
 

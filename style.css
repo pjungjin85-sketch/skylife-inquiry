@@ -267,10 +267,10 @@ body.page-admin{background:var(--bg);}
 .filter-bar{display:flex;gap:var(--s-4);margin-bottom:var(--s-4);flex-wrap:wrap;border-bottom:1px solid var(--border);}
 .filter-bar .filter-btn{margin-bottom:-1px;}
 .account-list{border-top:1px solid var(--dark);border-bottom:1px solid var(--border);}
-/* 이름 · 대리점코드 · 소속 · 가입일 · 상태 · 텔레그램 ID · 관리 */
+/* 이름 · 대리점코드 · 소속 · 가입일 · 최근 접속 · 상태 · 텔레그램 ID · 관리 */
 .account-row{
   display:grid;
-  grid-template-columns:1fr 1fr 1.2fr 100px 80px 190px 220px;
+  grid-template-columns:1fr 1fr 1.2fr 90px 100px 80px 190px 220px;
   align-items:center;column-gap:var(--s-4);
   text-align:center; /* 머리줄·내용 모두 열 가운데에 맞춘다 */
   padding:var(--s-3) var(--s-2);
@@ -287,6 +287,7 @@ body.page-admin{background:var(--bg);}
 .account-code{color:var(--mid);font-variant-numeric:tabular-nums;}
 .account-meta{color:var(--mid);}
 .account-date{font-size:var(--t-xs);color:var(--light);font-variant-numeric:tabular-nums;}
+.account-last{font-size:var(--t-xs);color:var(--mid);font-variant-numeric:tabular-nums;}
 .account-row>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .account-actions{display:flex;gap:6px;justify-content:center;}
 /* 상태는 상자 없이 글자로만 — 처리해야 할 '승인대기'만 눈에 띄게 */
@@ -452,7 +453,10 @@ body.page-admin{background:var(--bg);}
   .account-meta{grid-area:meta;font-size:var(--t-xs);}
   .account-date{grid-area:date;text-align:right;}
   .account-actions{grid-area:act;justify-content:flex-start;margin-top:6px;}
-  .account-row{grid-template-areas:"name code status" "meta meta date" "tg tg tg" "act act act";}
+  .account-row{grid-template-areas:"name code status" "meta meta date" "meta meta last" "tg tg tg" "act act act";}
+  .account-last{grid-area:last;text-align:right;}
+  .account-date::before{content:'가입 ';}
+  .account-last::before{content:'접속 ';}
   .account-tg{grid-area:tg;justify-content:flex-start;margin-top:4px;}
 }
 

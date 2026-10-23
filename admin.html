@@ -525,7 +525,7 @@ function renderAccounts() {
   list.className = 'account-list';
   const headRow = document.createElement('div');
   headRow.className = 'account-row account-head';
-  ['이름', '대리점코드', '소속', '가입일', '상태', '텔레그램 ID', '관리'].forEach(t => {
+  ['이름', '대리점코드', '소속', '가입일', '최근 접속', '상태', '텔레그램 ID', '관리'].forEach(t => {
     const c = document.createElement('span'); c.textContent = t; headRow.appendChild(c);
   });
   list.appendChild(headRow);
@@ -570,6 +570,7 @@ function buildAccountRow(a) {
   row.appendChild(cell('account-code', a.agency_code));
   row.appendChild(cell('account-meta', a.agency_name));
   row.appendChild(cell('account-date', date));
+  row.appendChild(cell('account-last', formatLastSeen(a.last_sign_in_at)));  // admin-bot.js
   row.appendChild(status);
   row.appendChild(buildTelegramCell(a));  // admin-bot.js
   row.appendChild(actions);

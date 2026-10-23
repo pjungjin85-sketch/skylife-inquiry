@@ -5,6 +5,18 @@
    DB 함수는 schema_bot.sql 참고. admin.html 의 sb / escapeHtml 을 쓴다.
    ══════════════════════════════════════════════════════════════ */
 
+/* ── 0. 최근 접속 (회원 목록) ── */
+function formatLastSeen(ts) {
+  if (!ts) return '접속 기록 없음';
+  const d = new Date(ts);
+  const now = new Date();
+  const hm = d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
+  if (d.toDateString() === now.toDateString()) return '오늘 ' + hm;
+  const y = new Date(now); y.setDate(now.getDate() - 1);
+  if (d.toDateString() === y.toDateString()) return '어제 ' + hm;
+  return d.toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' });
+}
+
 /* ── 1. 텔레그램 ID ── */
 function buildTelegramCell(a) {
   const wrap = document.createElement('div');

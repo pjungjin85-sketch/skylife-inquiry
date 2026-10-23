@@ -59,7 +59,8 @@ drop function if exists public.admin_list_accounts();
 create function public.admin_list_accounts()
 returns table (
   id uuid, name text, agency_name text, agency_code text, status text,
-  created_at timestamptz, email text, telegram_id bigint
+  created_at timestamptz, email text, telegram_id bigint,
+  last_sign_in_at timestamptz  -- 최근 접속(로그인). 가이드는 세션 저장이라 창을 닫으면 다시 로그인한다
 )
 language plpgsql security definer set search_path = public
 as $$
@@ -69,7 +70,7 @@ begin
   end if;
   return query
     select p.id, p.name, p.agency_name, p.agency_code, p.status, p.created_at,
-           u.email::text, p.telegram_id
+           u.email::text, p.telegram_id, u.last_sign_in_at
     from public.profiles p
     join auth.users u on u.id = p.id
     order by p.created_at desc;

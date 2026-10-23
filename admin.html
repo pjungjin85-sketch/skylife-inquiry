@@ -13,6 +13,7 @@
 <script src="bi-intro.js"></script>
 <script src="admin-bot.js"></script>
 <script src="admin-faq.js"></script>
+<script src="admin-botnotice.js"></script>
 </head>
 <body class="page-admin">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
@@ -63,6 +64,7 @@
     <button class="main-tab-btn" data-tab="accounts" onclick="switchMainTab('accounts')">회원 승인</button>
     <button class="main-tab-btn" data-tab="unanswered" onclick="switchMainTab('unanswered')">봇 미해결 질문</button>
     <button class="main-tab-btn" data-tab="faq" onclick="switchMainTab('faq')">등록한 답변</button>
+    <button class="main-tab-btn" data-tab="botnotice" onclick="switchMainTab('botnotice')">봇 공지</button>
   </div>
 
   <div id="tab-notices" class="main-tab-content active">
@@ -195,6 +197,28 @@
     </div>
     <div id="faq-list-container"></div>
   </div>
+
+  <div id="tab-botnotice" class="main-tab-content">
+    <div class="section-head">
+      <div class="section-head-text">
+        <span class="section-num">05</span>
+        <h2>봇 공지</h2>
+        <span class="section-note">텔레그램 봇 대화방 맨 위에 고정 · 직원이 다음에 봇에 말을 걸 때 반영 · 운영 봇·개인 봇 모두</span>
+      </div>
+    </div>
+    <div class="bn-current" id="bn-current"></div>
+    <label class="pw-label" for="bn-body">공지 내용</label>
+    <textarea id="bn-body" class="fa-input fa-textarea" maxlength="1000" rows="7" placeholder="예) [운영 안내]&#10;· 개통 가능시간: 신규 08:00~22:00 / 번호이동 10:00~20:00&#10;· 고객 개인정보(주민번호·전화번호)는 입력하지 마세요." oninput="this.dataset.touched='1';updateBotNoticeCount()"></textarea>
+    <div class="bn-bar">
+      <span class="list-count" id="bn-count">0 / 1000</span>
+      <button class="refresh-btn" id="bn-off-btn" onclick="saveBotNotice(true)">공지 내리기</button>
+      <button class="account-btn primary bn-save" onclick="saveBotNotice(false)">공지 저장</button>
+    </div>
+    <div id="bn-history-wrap" style="display:none">
+      <div class="list-header"><span class="list-count">이전 공지</span></div>
+      <div class="uq-list" id="bn-history"></div>
+    </div>
+  </div>
 </div>
 
 <!-- 비밀번호 초기화 -->
@@ -322,14 +346,19 @@ async function checkSession() {
 
 /* ── 메인 탭 전환 ── */
 function switchMainTab(tab) {
-  document.querySelectorAll('.main-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.main-tab-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === tab);
+    if (b.dataset.tab === tab) b.scrollIntoView({ block: 'nearest', inline: 'nearest' });  // 좁은 화면에서 탭 줄이 옆으로 넘어갈 때
+  });
   document.getElementById('tab-notices').classList.toggle('active', tab === 'notices');
   document.getElementById('tab-accounts').classList.toggle('active', tab === 'accounts');
   document.getElementById('tab-unanswered').classList.toggle('active', tab === 'unanswered');
   document.getElementById('tab-faq').classList.toggle('active', tab === 'faq');
+  document.getElementById('tab-botnotice').classList.toggle('active', tab === 'botnotice');
   if (tab === 'accounts' && !accountsLoaded) loadAccounts();
   if (tab === 'unanswered' && !unansweredLoaded) loadUnanswered();
   if (tab === 'faq' && !faqLoaded) loadFaqAnswers();
+  if (tab === 'botnotice' && !botNoticeLoaded) loadBotNotices();
 }
 
 /* ── 공지 작성/수정 ── */

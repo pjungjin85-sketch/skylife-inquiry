@@ -528,8 +528,26 @@ body.page-admin{background:var(--bg);}
 .fa-hist-item{border-top:1px solid var(--border);padding:var(--s-3) 0;}
 .fa-hist-item:first-child{border-top:none;padding-top:0;}
 .fa-hist-item .account-btn{margin-top:var(--s-2);}
-@media(max-width:400px){
-  .main-tab-bar{gap:var(--s-3);}  /* 탭 4개가 360px 폭에 한 줄로 들어가게 */
+/* 봇 공지 (admin-botnotice.js) */
+.bn-current{border:1px solid var(--border);border-left:3px solid var(--red);border-radius:var(--r-md);padding:var(--s-3) var(--s-4);margin-bottom:var(--s-5);font-size:var(--t-sm);color:var(--light);}
+.bn-current.off{border-left-color:var(--border);}
+.bn-current-head{font-size:var(--t-xs);color:var(--mid);font-weight:600;}
+.bn-current-body{margin-top:6px;color:var(--black);line-height:1.7;white-space:pre-line;overflow-wrap:anywhere;}
+.bn-bar{display:flex;align-items:center;gap:var(--s-2);margin:var(--s-3) 0 var(--s-6);}
+.bn-bar .list-count{margin-right:auto;}
+.bn-save{padding:9px 18px;}
+.bn-row{align-items:flex-start;}
+.fa-answer.bn-off{color:var(--light);}
+
+/* 탭이 많아 좁은 화면에서는 탭 줄을 옆으로 넘긴다.
+   overflow 를 주면 탭 밑줄(margin-bottom:-1px)이 잘리므로 회색 선을 안쪽 그림자로 바꾼다 */
+@media(max-width:600px){
+  .main-tab-bar{
+    overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+    border-bottom:none;box-shadow:inset 0 -1px 0 var(--border);
+  }
+  .main-tab-bar::-webkit-scrollbar{display:none;}
+  .main-tab-btn{margin-bottom:0;flex:0 0 auto;}
 }
 @media(max-width:768px){
   .fa-row{flex-direction:column;align-items:stretch;}

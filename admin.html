@@ -11,6 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o" crossorigin="anonymous"></script>
 <script src="line-draw.js"></script>
 <script src="bi-intro.js"></script>
+<script src="admin-bot.js"></script>
 </head>
 <body class="page-admin">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
@@ -59,6 +60,7 @@
   <div class="main-tab-bar">
     <button class="main-tab-btn active" data-tab="notices" onclick="switchMainTab('notices')">공지사항 관리</button>
     <button class="main-tab-btn" data-tab="accounts" onclick="switchMainTab('accounts')">회원 승인</button>
+    <button class="main-tab-btn" data-tab="unanswered" onclick="switchMainTab('unanswered')">봇 미해결 질문</button>
   </div>
 
   <div id="tab-notices" class="main-tab-content active">
@@ -123,7 +125,7 @@
       <div class="section-head-text">
         <span class="section-num">02</span>
         <h2>회원 승인</h2>
-        <span class="section-note">가입 승인 · 정지 · 비밀번호 초기화</span>
+        <span class="section-note">가입 승인 · 정지 · 비밀번호 초기화 · 텔레그램 봇 연결</span>
       </div>
       <img class="section-illust" src="img/illust/accounts.svg" width="705" height="712" alt="" decoding="async">
     </div>
@@ -139,7 +141,29 @@
       <button class="filter-btn" data-afilter="approved" onclick="setAccountFilter('approved')">승인됨</button>
       <button class="filter-btn" data-afilter="rejected" onclick="setAccountFilter('rejected')">정지됨</button>
     </div>
+    <div class="tg-help">텔레그램 봇은 <b>승인된 계정</b> 중 텔레그램 ID가 연결된 사람만 쓸 수 있습니다. 직원이 봇에 말을 걸면 "내 텔레그램 ID: …"를 알려주니, 그 숫자를 받아 입력하세요.</div>
     <div id="accounts-list-container"></div>
+  </div>
+
+  <div id="tab-unanswered" class="main-tab-content">
+    <div class="section-head">
+      <div class="section-head-text">
+        <span class="section-num">03</span>
+        <h2>봇 미해결 질문</h2>
+        <span class="section-note">자료가 없어 답하지 못한 질문 · 웹페이지에 내용 등록 후 처리 완료</span>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <button class="filter-btn active" data-udays="30" onclick="setUnansweredDays(30)">최근 30일</button>
+      <button class="filter-btn" data-udays="90" onclick="setUnansweredDays(90)">최근 90일</button>
+      <button class="filter-btn" data-udays="365" onclick="setUnansweredDays(365)">1년</button>
+    </div>
+    <div class="list-header">
+      <span class="list-count" id="unanswered-count"></span>
+      <label class="checkbox-label uq-toggle"><input type="checkbox" onchange="toggleUnansweredResolved(this.checked)"><span>처리 완료 포함</span></label>
+      <button class="refresh-btn" onclick="loadUnanswered()"><svg><use href="#i-refresh"></use></svg>새로고침</button>
+    </div>
+    <div id="unanswered-list-container"></div>
   </div>
 </div>
 
@@ -271,7 +295,9 @@ function switchMainTab(tab) {
   document.querySelectorAll('.main-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.getElementById('tab-notices').classList.toggle('active', tab === 'notices');
   document.getElementById('tab-accounts').classList.toggle('active', tab === 'accounts');
+  document.getElementById('tab-unanswered').classList.toggle('active', tab === 'unanswered');
   if (tab === 'accounts' && !accountsLoaded) loadAccounts();
+  if (tab === 'unanswered' && !unansweredLoaded) loadUnanswered();
 }
 
 /* ── 공지 작성/수정 ── */
@@ -499,7 +525,7 @@ function renderAccounts() {
   list.className = 'account-list';
   const headRow = document.createElement('div');
   headRow.className = 'account-row account-head';
-  ['이름', '대리점코드', '소속', '가입일', '상태', '관리'].forEach(t => {
+  ['이름', '대리점코드', '소속', '가입일', '상태', '텔레그램 ID', '관리'].forEach(t => {
     const c = document.createElement('span'); c.textContent = t; headRow.appendChild(c);
   });
   list.appendChild(headRow);
@@ -545,6 +571,7 @@ function buildAccountRow(a) {
   row.appendChild(cell('account-meta', a.agency_name));
   row.appendChild(cell('account-date', date));
   row.appendChild(status);
+  row.appendChild(buildTelegramCell(a));  // admin-bot.js
   row.appendChild(actions);
   return row;
 }

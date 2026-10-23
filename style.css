@@ -267,10 +267,10 @@ body.page-admin{background:var(--bg);}
 .filter-bar{display:flex;gap:var(--s-4);margin-bottom:var(--s-4);flex-wrap:wrap;border-bottom:1px solid var(--border);}
 .filter-bar .filter-btn{margin-bottom:-1px;}
 .account-list{border-top:1px solid var(--dark);border-bottom:1px solid var(--border);}
-/* 이름 · 대리점코드 · 소속 · 가입일 · 상태 · 관리 */
+/* 이름 · 대리점코드 · 소속 · 가입일 · 상태 · 텔레그램 ID · 관리 */
 .account-row{
   display:grid;
-  grid-template-columns:1fr 1fr 1.2fr 100px 90px 220px;
+  grid-template-columns:1fr 1fr 1.2fr 100px 80px 190px 220px;
   align-items:center;column-gap:var(--s-4);
   text-align:center; /* 머리줄·내용 모두 열 가운데에 맞춘다 */
   padding:var(--s-3) var(--s-2);
@@ -452,8 +452,40 @@ body.page-admin{background:var(--bg);}
   .account-meta{grid-area:meta;font-size:var(--t-xs);}
   .account-date{grid-area:date;text-align:right;}
   .account-actions{grid-area:act;justify-content:flex-start;margin-top:6px;}
+  .account-row{grid-template-areas:"name code status" "meta meta date" "tg tg tg" "act act act";}
+  .account-tg{grid-area:tg;justify-content:flex-start;margin-top:4px;}
 }
 
 /* 목록 '내용' 열 · 체크박스 전용 폼 그룹 */
 .col-content{text-align:left;color:var(--mid);font-size:var(--t-xs);}
 .form-group-checkbox{flex-direction:row;align-items:center;gap:var(--s-3);}
+
+/* ============================================================
+   관리자 — 텔레그램 봇 연동 (admin-bot.js)
+   ============================================================ */
+.account-tg{display:flex;gap:6px;align-items:center;justify-content:center;}
+.tg-input{
+  width:120px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--r-sm);
+  font-size:var(--t-xs);font-variant-numeric:tabular-nums;color:var(--dark);background:var(--bg);
+}
+.tg-input:focus{outline:none;border-color:var(--dark);}
+.tg-input::placeholder{color:var(--light);}
+.account-tg.inactive .tg-input{color:var(--light);text-decoration:line-through;}
+.tg-help{font-size:var(--t-xs);color:var(--mid);margin:0 0 var(--s-3);line-height:1.6;}
+
+.uq-toggle{margin-left:auto;font-size:var(--t-xs);color:var(--mid);}
+.uq-list{border-top:1px solid var(--dark);border-bottom:1px solid var(--border);}
+.uq-row{display:flex;gap:var(--s-4);align-items:center;padding:var(--s-3) var(--s-2);border-top:1px solid var(--border);}
+.uq-row:first-child{border-top:none;}
+.uq-row:hover{background:var(--bg3);}
+.uq-main{flex:1 1 auto;min-width:0;}
+.uq-query{font-size:var(--t-sm);font-weight:600;color:var(--black);word-break:keep-all;overflow-wrap:anywhere;}
+.uq-meta{font-size:var(--t-xs);color:var(--light);margin-top:4px;}
+.uq-done{font-size:var(--t-xs);color:var(--ok);margin-top:4px;}
+.uq-row.resolved .uq-query{color:var(--light);font-weight:500;}
+.uq-actions{flex:0 0 auto;}
+/* 일러스트 없는 섹션 머리도 설명을 제목 아래 줄에 (봇 미해결 질문) */
+.section-head-text .section-note{margin-left:0;flex-basis:100%;white-space:normal;}
+@media(max-width:900px){
+  .account-tg{justify-content:flex-start;}
+}

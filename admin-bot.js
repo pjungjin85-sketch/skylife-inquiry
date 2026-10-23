@@ -124,7 +124,10 @@ function buildUnansweredRow(r) {
   meta.className = 'uq-meta';
   const last = new Date(r.last_asked).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
   const kinds = [...new Set((r.routes || '').split(',').map(x => ROUTE_LABEL[x] || x))].join(' · ');
-  meta.textContent = kinds + ' · ' + r.ask_count + '회 · 마지막 ' + last + (r.askers ? ' · ' + r.askers : '');
+  const BOT_LABEL = { main: '운영 봇', personal: '개인 봇' };
+  const bots = (r.bots || '').split(',').filter(Boolean).map(b => BOT_LABEL[b] || b).join('·');
+  meta.textContent = kinds + ' · ' + r.ask_count + '회 · 마지막 ' + last +
+    (bots ? ' · ' + bots : '') + (r.askers ? ' · ' + r.askers : '');
   main.appendChild(q); main.appendChild(meta);
   if (r.resolved_at) {
     const done = document.createElement('div');

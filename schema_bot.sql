@@ -102,10 +102,12 @@ $$;
 --   no_result    : 관련 자료를 찾지 못함
 --   clarify_nohit: 근거가 없어 되물음
 --   llm_general  : KB 대신 일반 상식으로 답함 (KB 보강 후보)
-create or replace function public.admin_list_unanswered(days integer default 30, include_resolved boolean default false)
+drop function if exists public.admin_list_unanswered(integer, boolean);
+create function public.admin_list_unanswered(days integer default 30, include_resolved boolean default false)
 returns table (
   query text, ask_count bigint, last_asked timestamptz, routes text,
-  askers text, resolved_at timestamptz, resolved_note text
+  askers text, resolved_at timestamptz, resolved_note text,
+  bots text  -- 어느 봇에서 나온 질문인지 (main=운영, personal=노트북 개인 봇)
 )
 language plpgsql security definer set search_path = public
 as $$
@@ -120,7 +122,8 @@ begin
            string_agg(distinct l.route, ','),
            string_agg(distinct coalesce(p.name || ' (' || p.agency_name || ')', '미등록 ' || l.user_id), ', '),
            max(l.resolved_at),
-           max(l.resolved_note)
+           max(l.resolved_note),
+           string_agg(distinct l.bot, ',')
     from public.bot_query_logs l
     left join public.profiles p on p.telegram_id::text = l.user_id
     where l.found = false

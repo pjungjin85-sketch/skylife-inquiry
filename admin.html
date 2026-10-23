@@ -132,7 +132,7 @@
     <div class="search-bar">
       <div class="search-wrap">
         <svg><use href="#i-search"></use></svg>
-        <input type="text" id="account-search" class="search-input" placeholder="계정(이메일) 또는 이름 검색" aria-label="계정(이메일) 또는 이름 검색" oninput="setAccountSearch(this.value)">
+        <input type="text" id="account-search" class="search-input" placeholder="아이디 또는 이름 검색" aria-label="아이디 또는 이름 검색" oninput="setAccountSearch(this.value)">
       </div>
     </div>
     <div class="filter-bar">
@@ -525,7 +525,7 @@ function renderAccounts() {
   list.className = 'account-list';
   const headRow = document.createElement('div');
   headRow.className = 'account-row account-head';
-  ['이름', '대리점코드', '소속', '가입일', '최근 접속', '상태', '텔레그램 ID', '관리'].forEach(t => {
+  ['이름', '아이디', '대리점코드', '소속', '가입일', '최근 접속', '상태', '텔레그램 ID', '관리'].forEach(t => {
     const c = document.createElement('span'); c.textContent = t; headRow.appendChild(c);
   });
   list.appendChild(headRow);
@@ -567,6 +567,7 @@ function buildAccountRow(a) {
   actions.appendChild(approveBtn); actions.appendChild(rejectBtn); actions.appendChild(resetBtn);
 
   row.appendChild(cell('account-name', a.name));
+  row.appendChild(cell('account-login', (a.email || '').split('@')[0]));  // 로그인 아이디
   row.appendChild(cell('account-code', a.agency_code));
   row.appendChild(cell('account-meta', a.agency_name));
   row.appendChild(cell('account-date', date));

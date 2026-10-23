@@ -267,11 +267,11 @@ body.page-admin{background:var(--bg);}
 .filter-bar{display:flex;gap:var(--s-4);margin-bottom:var(--s-4);flex-wrap:wrap;border-bottom:1px solid var(--border);}
 .filter-bar .filter-btn{margin-bottom:-1px;}
 .account-list{border-top:1px solid var(--dark);border-bottom:1px solid var(--border);}
-/* 이름 · 대리점코드 · 소속 · 가입일 · 최근 접속 · 상태 · 텔레그램 ID · 관리 */
+/* 이름 · 아이디 · 대리점코드 · 소속 · 가입일 · 최근 접속 · 상태 · 텔레그램 ID · 관리 */
 .account-row{
   display:grid;
-  grid-template-columns:1fr 1fr 1.2fr 90px 100px 80px 190px 220px;
-  align-items:center;column-gap:var(--s-4);
+  grid-template-columns:60px minmax(70px,1fr) minmax(70px,1fr) minmax(84px,1.2fr) 76px 80px 56px 156px 204px;
+  align-items:center;column-gap:var(--s-3);
   text-align:center; /* 머리줄·내용 모두 열 가운데에 맞춘다 */
   padding:var(--s-3) var(--s-2);
   border-top:1px solid var(--border);
@@ -285,6 +285,7 @@ body.page-admin{background:var(--bg);}
 }
 .account-name{font-weight:700;color:var(--black);letter-spacing:-.02em;}
 .account-code{color:var(--mid);font-variant-numeric:tabular-nums;}
+.account-login{color:var(--dark);font-variant-numeric:tabular-nums;}
 .account-meta{color:var(--mid);}
 .account-date{font-size:var(--t-xs);color:var(--light);font-variant-numeric:tabular-nums;}
 .account-last{font-size:var(--t-xs);color:var(--mid);font-variant-numeric:tabular-nums;}
@@ -436,8 +437,8 @@ body.page-admin{background:var(--bg);}
   .main-tab-bar{gap:var(--s-4);}
 }
 
-@media(max-width:900px){
-  /* 900px 이하(태블릿·모바일): 표 열이 다 안 들어가므로 머리줄을 숨기고 한 계정을 세 줄로 — 이름·코드·상태 / 소속·가입일 / 버튼 */
+@media(max-width:1100px){
+  /* 1100px 이하(작은 노트북·태블릿·모바일): 9칸이 다 안 들어가므로 머리줄을 숨기고 한 계정을 세 줄로 — 이름·코드·상태 / 소속·가입일 / 버튼 */
   .account-head{display:none;}
   .account-row{
     /* 이름 칸 폭을 고정해 줄마다 코드 위치가 같게, 오른쪽 열은 상태·가입일 */
@@ -453,7 +454,10 @@ body.page-admin{background:var(--bg);}
   .account-meta{grid-area:meta;font-size:var(--t-xs);}
   .account-date{grid-area:date;text-align:right;}
   .account-actions{grid-area:act;justify-content:flex-start;margin-top:6px;}
-  .account-row{grid-template-areas:"name code status" "meta meta date" "meta meta last" "tg tg tg" "act act act";}
+  .account-row{grid-template-areas:"name login status" "code meta date" "code meta last" "tg tg tg" "act act act";}
+  .account-login{grid-area:login;font-size:var(--t-xs);}
+  .account-code{align-self:start;}
+  .account-meta{grid-area:meta;align-self:start;}
   .account-last{grid-area:last;text-align:right;}
   .account-date::before{content:'가입 ';}
   .account-last::before{content:'접속 ';}
@@ -469,7 +473,7 @@ body.page-admin{background:var(--bg);}
    ============================================================ */
 .account-tg{display:flex;gap:6px;align-items:center;justify-content:center;}
 .tg-input{
-  width:120px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--r-sm);
+  width:96px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--r-sm);
   font-size:var(--t-xs);font-variant-numeric:tabular-nums;color:var(--dark);background:var(--bg);
 }
 .tg-input:focus{outline:none;border-color:var(--dark);}
@@ -490,6 +494,6 @@ body.page-admin{background:var(--bg);}
 .uq-actions{flex:0 0 auto;}
 /* 일러스트 없는 섹션 머리도 설명을 제목 아래 줄에 (봇 미해결 질문) */
 .section-head-text .section-note{margin-left:0;flex-basis:100%;white-space:normal;}
-@media(max-width:900px){
+@media(max-width:1100px){
   .account-tg{justify-content:flex-start;}
 }

@@ -119,8 +119,10 @@ drop function if exists public.admin_list_unanswered(integer, boolean);
 create function public.admin_list_unanswered(days integer default 30, include_resolved boolean default false)
 returns table (
   query text, ask_count bigint, last_asked timestamptz, routes text,
-  askers text, resolved_at timestamptz, resolved_note text,
-  bots text  -- 어느 봇에서 나온 질문인지 (main=운영, personal=노트북 개인 봇)
+  askers text,        -- 사람별 횟수: "박정진 (본사) 2회, 송재혁 (무선사업팀) 1회"
+  resolved_at timestamptz, resolved_note text,
+  bots text,          -- 어느 봇에서 나온 질문인지 (main=운영, personal=노트북 개인 봇)
+  first_asked timestamptz
 )
 language plpgsql security definer set search_path = public
 as $$
@@ -129,22 +131,32 @@ begin
     raise exception 'unauthorized';
   end if;
   return query
-    select (array_agg(regexp_replace(l.query, '^[-•*·>\s]+', '') order by l.asked_at desc))[1],  -- 대표 문구: 가장 최근 표현
+    with base as (
+      select l.*, public.bot_norm_query(l.query) as k,
+             coalesce(p.name || ' (' || p.agency_name || ')', '미등록 ' || l.user_id) as who
+      from public.bot_query_logs l
+      left join public.profiles p on p.telegram_id::text = l.user_id
+      where l.found = false
+        and l.route in ('no_coverage', 'no_result', 'clarify_nohit', 'llm_general')
+        and l.asked_at > now() - make_interval(days => days)
+    ),
+    per as (
+      select b.k, b.who, count(*) as c from base b group by b.k, b.who
+    )
+    select (array_agg(regexp_replace(b.query, '^[-•*·>\s]+', '') order by b.asked_at desc))[1],  -- 대표 문구: 가장 최근 표현
            count(*)::bigint,
-           max(l.asked_at),
-           string_agg(distinct l.route, ','),
-           string_agg(distinct coalesce(p.name || ' (' || p.agency_name || ')', '미등록 ' || l.user_id), ', '),
-           max(l.resolved_at),
-           max(l.resolved_note),
-           string_agg(distinct l.bot, ',')
-    from public.bot_query_logs l
-    left join public.profiles p on p.telegram_id::text = l.user_id
-    where l.found = false
-      and l.route in ('no_coverage', 'no_result', 'clarify_nohit', 'llm_general')
-      and l.asked_at > now() - make_interval(days => days)
-    group by public.bot_norm_query(l.query)
-    having include_resolved or max(l.resolved_at) is null
-    order by max(l.resolved_at) nulls first, max(l.asked_at) desc
+           max(b.asked_at),
+           string_agg(distinct b.route, ','),
+           (select string_agg(per.who || ' ' || per.c || '회', ', ' order by per.c desc, per.who)
+              from per where per.k = b.k),
+           max(b.resolved_at),
+           max(b.resolved_note),
+           string_agg(distinct b.bot, ','),
+           min(b.asked_at)
+    from base b
+    group by b.k
+    having include_resolved or max(b.resolved_at) is null
+    order by max(b.resolved_at) nulls first, max(b.asked_at) desc
     limit 300;
 end;
 $$;

@@ -170,6 +170,52 @@ async function resolveUnanswered(r, btn) {
   loadUnanswered();
 }
 
+/* 엑셀에 붙여넣으면 칸이 나뉘도록 탭 구분(TSV)으로 복사. 지금 화면의 기간·처리완료 포함 조건 그대로.
+   맨 끝 '답변' 칸은 비워 둔다 — 유관부서에 보내 채워 받는 용도. */
+async function copyUnanswered(btn) {
+  if (!unanswered.length) { alert('복사할 질문이 없습니다.'); return; }
+  const BOT_LABEL = { main: '운영 봇', personal: '개인 봇' };
+  // 엑셀이 날짜로 인식하는 형식 (정렬·필터 가능): 2026-10-23 11:34
+  const pad = n => String(n).padStart(2, '0');
+  const fmt = ts => {
+    if (!ts) return '';
+    const d = new Date(ts);
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  };
+  // 셀 안의 탭·줄바꿈은 칸이 밀리지 않게 공백으로
+  const clean = v => String(v == null ? '' : v).replace(/[\t\r\n]+/g, ' ').trim();
+  const head = ['번호', '질문', '유형', '질문 횟수', '질문자(횟수)', '처음 질문', '마지막 질문', '출처', '처리 상태', '처리 메모', '답변'];
+  const rows = unanswered.map((r, i) => [
+    i + 1,
+    r.query,
+    [...new Set((r.routes || '').split(',').map(x => ROUTE_LABEL[x] || x))].join(' · '),
+    r.ask_count,
+    r.askers,
+    fmt(r.first_asked),
+    fmt(r.last_asked),
+    (r.bots || '').split(',').filter(Boolean).map(b => BOT_LABEL[b] || b).join(' · '),
+    r.resolved_at ? '처리 완료 ' + fmt(r.resolved_at) : '미처리',
+    r.resolved_note,
+    '',
+  ]);
+  const tsv = [head, ...rows].map(cols => cols.map(clean).join('\t')).join('\n');
+
+  let ok = false;
+  try { await navigator.clipboard.writeText(tsv); ok = true; } catch (e) {
+    // 클립보드 권한이 없을 때(오래된 브라우저 등) 대체 방법
+    const ta = document.createElement('textarea');
+    ta.value = tsv; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { ok = document.execCommand('copy'); } catch (e2) { ok = false; }
+    ta.remove();
+  }
+  if (!ok) { alert('복사하지 못했습니다. 브라우저를 바꿔 다시 시도해주세요.'); return; }
+  const original = btn.textContent;
+  btn.textContent = '복사됨 ✓ ' + rows.length + '건 — 엑셀에 붙여넣기';
+  btn.disabled = true;
+  setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 2500);
+}
+
 function setUnansweredLoading(msg) {
   const el = document.createElement('div'); el.className = 'loading'; el.textContent = msg;
   const c = document.getElementById('unanswered-list-container'); c.textContent = ''; c.appendChild(el);

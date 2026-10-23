@@ -77,26 +77,8 @@ begin
 end;
 $$;
 
--- 텔레그램 ID 등록/변경/해제 (null 이면 해제)
-create or replace function public.admin_set_telegram_id(account_id uuid, tg_id bigint)
-returns void
-language plpgsql security definer set search_path = public
-as $$
-begin
-  if not exists (select 1 from public.profiles where id = auth.uid() and is_admin) then
-    raise exception 'unauthorized';
-  end if;
-  if tg_id is not null and tg_id <= 0 then
-    raise exception 'invalid telegram id';
-  end if;
-  if tg_id is not null and exists (
-    select 1 from public.profiles where telegram_id = tg_id and id <> account_id
-  ) then
-    raise exception 'telegram id already used';
-  end if;
-  update public.profiles set telegram_id = tg_id where id = account_id;
-end;
-$$;
+-- 텔레그램 ID 는 직원이 가이드에서 직접 연결한다 (아래 4번). 관리자 입력 함수는 없앴다.
+drop function if exists public.admin_set_telegram_id(uuid, bigint);
 
 -- 자료가 없어 답하지 못한 질문 — 같은 질문은 묶어서 횟수로
 --   no_coverage  : "자료에 없어서 안내드리기 어렵습니다"
@@ -177,7 +159,6 @@ end;
 $$;
 
 grant execute on function public.admin_list_accounts() to authenticated;
-grant execute on function public.admin_set_telegram_id(uuid, bigint) to authenticated;
 grant execute on function public.admin_list_unanswered(integer, boolean) to authenticated;
 grant execute on function public.admin_resolve_query(text, text) to authenticated;
 

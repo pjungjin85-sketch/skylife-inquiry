@@ -270,7 +270,7 @@ body.page-admin{background:var(--bg);}
 /* 이름 · 아이디 · 대리점코드 · 소속 · 가입일 · 최근 접속 · 상태 · 텔레그램 ID · 관리 */
 .account-row{
   display:grid;
-  grid-template-columns:60px minmax(70px,1fr) minmax(70px,1fr) minmax(84px,1.2fr) 76px 80px 56px 156px 204px;
+  grid-template-columns:60px minmax(70px,1fr) minmax(70px,1fr) minmax(84px,1.2fr) 76px 80px 56px 104px 204px;
   align-items:center;column-gap:var(--s-3);
   text-align:center; /* 머리줄·내용 모두 열 가운데에 맞춘다 */
   padding:var(--s-3) var(--s-2);
@@ -461,7 +461,8 @@ body.page-admin{background:var(--bg);}
   .account-last{grid-area:last;text-align:right;}
   .account-date::before{content:'가입 ';}
   .account-last::before{content:'접속 ';}
-  .account-tg{grid-area:tg;justify-content:flex-start;margin-top:4px;}
+  .account-row .account-tg{grid-area:tg;font-size:var(--t-xs);margin-top:2px;}
+  .account-row .account-tg::before{content:'텔레그램';margin-right:5px;color:var(--light);text-decoration:none;display:inline-block;}
 }
 
 /* 목록 '내용' 열 · 체크박스 전용 폼 그룹 */
@@ -471,14 +472,9 @@ body.page-admin{background:var(--bg);}
 /* ============================================================
    관리자 — 텔레그램 봇 연동 (admin-bot.js)
    ============================================================ */
-.account-tg{display:flex;gap:6px;align-items:center;justify-content:center;}
-.tg-input{
-  width:96px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--r-sm);
-  font-size:var(--t-xs);font-variant-numeric:tabular-nums;color:var(--dark);background:var(--bg);
-}
-.tg-input:focus{outline:none;border-color:var(--dark);}
-.tg-input::placeholder{color:var(--light);}
-.account-tg.inactive .tg-input{color:var(--light);text-decoration:line-through;}
+.account-tg{font-size:var(--t-sm);color:var(--dark);font-variant-numeric:tabular-nums;}
+.account-tg.none{color:var(--light);}
+.account-tg.inactive{color:var(--light);text-decoration:line-through;}
 .tg-help{font-size:var(--t-xs);color:var(--mid);margin:0 0 var(--s-3);line-height:1.6;}
 
 .uq-toggle{margin-left:auto;font-size:var(--t-xs);color:var(--mid);}
@@ -494,6 +490,3 @@ body.page-admin{background:var(--bg);}
 .uq-actions{flex:0 0 auto;}
 /* 일러스트 없는 섹션 머리도 설명을 제목 아래 줄에 (봇 미해결 질문) */
 .section-head-text .section-note{margin-left:0;flex-basis:100%;white-space:normal;}
-@media(max-width:1100px){
-  .account-tg{justify-content:flex-start;}
-}

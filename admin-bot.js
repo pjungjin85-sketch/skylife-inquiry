@@ -1,6 +1,6 @@
 /* ══════════════════════════════════════════════════════════════
    관리자 — 업무지원 텔레그램 봇 연동
-   1) 회원 목록의 '텔레그램 ID' 칸: 승인된 계정에 ID를 연결하면 봇 사용 가능
+   1) 회원 목록의 '텔레그램 ID' 칸: 직원이 가이드에서 연결한 ID 표시 (읽기 전용)
    2) '봇 미해결 질문' 탭: 봇이 자료가 없어 답하지 못한 질문 → KB 보강 후 처리 완료
    DB 함수는 schema_bot.sql 참고. admin.html 의 sb / escapeHtml 을 쓴다.
    ══════════════════════════════════════════════════════════════ */
@@ -17,53 +17,15 @@ function formatLastSeen(ts) {
   return d.toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' });
 }
 
-/* ── 1. 텔레그램 ID ── */
+/* ── 1. 텔레그램 ID (읽기 전용) ──
+   연결·해제는 직원이 현장영업 가이드 로그아웃 옆에서 직접 한다. 여기서는 상태만 보여준다.
+   정지된 계정은 ID 가 남아 있어도 봇을 못 쓰므로 줄을 그어 표시한다. */
 function buildTelegramCell(a) {
-  const wrap = document.createElement('div');
-  wrap.className = 'account-tg';
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.inputMode = 'numeric';
-  input.className = 'tg-input';
-  input.placeholder = '미연결';
-  input.value = a.telegram_id ? String(a.telegram_id) : '';
-  input.setAttribute('aria-label', a.name + ' 텔레그램 ID');
-  const btn = document.createElement('button');
-  btn.className = 'account-btn';
-  btn.textContent = '저장';
-  btn.disabled = true;
-  const original = input.value;
-  input.oninput = () => { btn.disabled = input.value.trim() === original; };
-  input.onkeydown = e => { if (e.key === 'Enter' && !btn.disabled) btn.click(); };
-  btn.onclick = () => saveTelegramId(a, input.value.trim(), btn);
-  wrap.appendChild(input); wrap.appendChild(btn);
-  if (a.telegram_id && a.status !== 'approved') {
-    wrap.title = '승인된 계정만 봇을 사용할 수 있습니다';
-    wrap.classList.add('inactive');
-  }
-  return wrap;
-}
-
-async function saveTelegramId(a, value, btn) {
-  if (value && !/^\d{5,15}$/.test(value)) {
-    alert('텔레그램 ID는 숫자만 입력해주세요.\n(봇에 말을 걸면 "내 텔레그램 ID: …" 로 알려줍니다)');
-    return;
-  }
-  btn.disabled = true; btn.textContent = '저장 중';
-  // bigint 를 숫자로 보내면 JS 정밀도 문제 없이 들어간다 (텔레그램 ID 는 2^53 미만)
-  const { error } = await sb.rpc('admin_set_telegram_id', { account_id: a.id, tg_id: value ? Number(value) : null });
-  btn.textContent = '저장';
-  if (error) {
-    const m = error.message || '';
-    if (/already used/i.test(m)) alert('이미 다른 계정에 연결된 텔레그램 ID입니다.');
-    else if (/unauthorized/i.test(m)) alert('관리자 권한이 없습니다. 다시 로그인해주세요.');
-    else alert('저장 실패: ' + (m || JSON.stringify(error)));
-    btn.disabled = false;
-    return;
-  }
-  const { data } = await sb.rpc('admin_list_accounts');
-  allAccounts = data || allAccounts;
-  renderAccounts();
+  const c = document.createElement('span');
+  c.className = 'account-tg' + (a.telegram_id ? '' : ' none') + (a.telegram_id && a.status !== 'approved' ? ' inactive' : '');
+  c.textContent = a.telegram_id ? String(a.telegram_id) : '미연결';
+  if (a.telegram_id && a.status !== 'approved') c.title = '승인된 계정만 봇을 사용할 수 있습니다';
+  return c;
 }
 
 /* ── 2. 봇 미해결 질문 ── */
@@ -183,7 +145,11 @@ async function copyUnanswered(btn) {
     return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
   };
   // 셀 안의 탭·줄바꿈은 칸이 밀리지 않게 공백으로
-  const clean = v => String(v == null ? '' : v).replace(/[\t\r\n]+/g, ' ').trim();
+  // = + - @ 로 시작하는 칸은 엑셀이 수식으로 실행한다 (직원 질문이 그대로 들어오므로) → ' 를 붙여 글자로
+  const clean = v => {
+    const t = String(v == null ? '' : v).replace(/[\t\r\n]+/g, ' ').trim();
+    return /^[=+\-@]/.test(t) ? "'" + t : t;
+  };
   const head = ['번호', '질문', '유형', '질문 횟수', '질문자(횟수)', '처음 질문', '마지막 질문', '출처', '처리 상태', '처리 메모', '답변'];
   const rows = unanswered.map((r, i) => [
     i + 1,

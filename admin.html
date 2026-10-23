@@ -203,8 +203,12 @@
       <div class="section-head-text">
         <span class="section-num">05</span>
         <h2>봇 공지</h2>
-        <span class="section-note">텔레그램 봇 대화방 맨 위에 고정 · 직원이 다음에 봇에 말을 걸 때 반영 · 운영 봇·개인 봇 모두</span>
+        <span class="section-note">텔레그램 봇 대화방 맨 위에 고정 · 다음에 봇에 말을 걸 때 반영 · 운영 봇·개인 봇 따로</span>
       </div>
+    </div>
+    <div class="filter-bar">
+      <button class="filter-btn active" data-bnbot="main" onclick="setBotNoticeBot('main')">운영 봇 (@skylife_support_bot)</button>
+      <button class="filter-btn" data-bnbot="personal" onclick="setBotNoticeBot('personal')">개인 봇</button>
     </div>
     <div class="bn-current" id="bn-current"></div>
     <label class="pw-label" for="bn-body">공지 내용</label>

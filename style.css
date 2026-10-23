@@ -488,6 +488,19 @@ body.page-admin{background:var(--bg);}
 .uq-done{font-size:var(--t-xs);color:var(--ok);margin-top:4px;}
 .uq-row.resolved .uq-query{color:var(--light);font-weight:500;}
 .uq-actions{flex:0 0 auto;}
+/* 페이지 나누기 (미해결 질문·등록한 답변) */
+.pager{display:flex;justify-content:center;gap:4px;margin-top:var(--s-5);}
+.pager-btn{
+  min-width:36px;height:36px;padding:0 8px;border:1px solid var(--border);border-radius:var(--r-md);
+  background:var(--bg);color:var(--mid);font-size:var(--t-sm);font-weight:600;cursor:pointer;
+  font-variant-numeric:tabular-nums;
+  transition:border-color var(--dur-fast) var(--ease),color var(--dur-fast) var(--ease);
+}
+.pager-btn:hover{border-color:var(--light);color:var(--black);}
+.pager-btn.active{background:var(--black);border-color:var(--black);color:#fff;cursor:default;}
+.pager-btn:disabled{opacity:.35;cursor:not-allowed;}
+.pager-btn:disabled:hover{border-color:var(--border);color:var(--mid);}
+
 /* 등록한 답변 (admin-faq.js) — 목록은 uq-* 를 같이 쓴다 */
 .fa-new{margin-left:auto;}
 .fa-row{align-items:flex-start;}

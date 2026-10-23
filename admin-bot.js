@@ -28,6 +28,46 @@ function buildTelegramCell(a) {
   return c;
 }
 
+/* ── 페이지 나누기 (미해결 질문·등록한 답변 공용) ── */
+const PAGE_SIZE = 10;
+
+function clampPage(page, total) {
+  return Math.min(Math.max(1, page), Math.max(1, Math.ceil(total / PAGE_SIZE)));
+}
+
+// [이전] 1 2 3 4 5 [다음] — 현재 페이지 주변 5개만 보여준다. 한 페이지뿐이면 null
+function buildPager(total, page, onPage) {
+  const pages = Math.ceil(total / PAGE_SIZE);
+  if (pages <= 1) return null;
+  const nav = document.createElement('nav');
+  nav.className = 'pager';
+  nav.setAttribute('aria-label', '페이지');
+  const add = (label, target, opts = {}) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'pager-btn' + (opts.current ? ' active' : '');
+    b.textContent = label;
+    if (opts.aria) b.setAttribute('aria-label', opts.aria);
+    if (opts.current) b.setAttribute('aria-current', 'page');
+    b.disabled = !!opts.disabled;
+    b.onclick = () => onPage(target);
+    nav.appendChild(b);
+  };
+  add('‹', page - 1, { disabled: page === 1, aria: '이전 페이지' });
+  let start = Math.max(1, page - 2);
+  const end = Math.min(pages, start + 4);
+  start = Math.max(1, end - 4);
+  for (let i = start; i <= end; i++) add(String(i), i, { current: i === page });
+  add('›', page + 1, { disabled: page === pages, aria: '다음 페이지' });
+  return nav;
+}
+
+// 페이지를 넘기면 목록 맨 위가 보이게
+function scrollListTop(containerId) {
+  const c = document.getElementById(containerId);
+  if (c && c.getBoundingClientRect().top < 0) c.scrollIntoView({ block: 'start' });
+}
+
 /* ── 2. 봇 미해결 질문 ── */
 const ROUTE_LABEL = {
   no_coverage: '자료 없음',
@@ -39,6 +79,7 @@ let unanswered = [];
 let unansweredLoaded = false;
 let unansweredDays = 30;
 let unansweredShowResolved = false;
+let unansweredPage = 1;
 
 async function loadUnanswered() {
   setUnansweredLoading('불러오는 중...');
@@ -59,12 +100,14 @@ async function loadUnanswered() {
 
 function setUnansweredDays(d) {
   unansweredDays = d;
+  unansweredPage = 1;
   document.querySelectorAll('[data-udays]').forEach(b => b.classList.toggle('active', Number(b.dataset.udays) === d));
   loadUnanswered();
 }
 
 function toggleUnansweredResolved(on) {
   unansweredShowResolved = on;
+  unansweredPage = 1;
   loadUnanswered();
 }
 
@@ -79,10 +122,16 @@ function renderUnanswered() {
       '<div class="empty-text">최근 ' + unansweredDays + '일간 자료가 없어 답하지 못한 질문이 없습니다.</div></div>';
     return;
   }
+  unansweredPage = clampPage(unansweredPage, unanswered.length);
+  const from = (unansweredPage - 1) * PAGE_SIZE;
   const list = document.createElement('div');
   list.className = 'uq-list';
-  unanswered.forEach(r => list.appendChild(buildUnansweredRow(r)));
+  unanswered.slice(from, from + PAGE_SIZE).forEach(r => list.appendChild(buildUnansweredRow(r)));
   c.appendChild(list);
+  const pager = buildPager(unanswered.length, unansweredPage, p => {
+    unansweredPage = p; renderUnanswered(); scrollListTop('unanswered-list-container');
+  });
+  if (pager) c.appendChild(pager);
 }
 
 function buildUnansweredRow(r) {
@@ -139,6 +188,7 @@ async function resolveUnanswered(r, btn) {
 }
 
 /* 엑셀에 붙여넣으면 칸이 나뉘도록 탭 구분(TSV)으로 복사. 지금 화면의 기간·처리완료 포함 조건 그대로.
+   페이지와 상관없이 목록 전체를 복사한다.
    맨 끝 '답변' 칸은 비워 둔다 — 유관부서에 보내 채워 받는 용도. */
 async function copyUnanswered(btn) {
   if (!unanswered.length) { alert('복사할 질문이 없습니다.'); return; }

@@ -3,7 +3,7 @@
    '봇 미해결 질문' 의 「답변 등록」 또는 이 탭의 「새 답변 추가」로 넣는다.
    저장하면 모바일 FAQ 화면에 바로 보이고, 봇은 다음 날 05:00 KB 재빌드 때 반영된다.
    지우지 않고 숨김으로 내리며, 고칠 때마다 이전 내용이 이력으로 남는다.
-   DB 함수는 schema_faq.sql 참고. admin.html 의 sb 와 admin-bot.js 의 loadUnanswered 를 쓴다.
+   DB 함수는 schema_faq.sql 참고. admin.html 의 sb 와 admin-bot.js 의 loadUnanswered·buildPager 를 쓴다.
    ══════════════════════════════════════════════════════════════ */
 
 // 모바일 FAQ(faq.json) 의 카테고리 — 새 카테고리를 만들면 FAQ 화면에 탭이 하나 늘어난다
@@ -13,6 +13,7 @@ let faqAnswers = [];
 let faqLoaded = false;
 let faqFilter = 'visible';   // visible | hidden | all
 let faqSearch = '';
+let faqPage = 1;
 
 function el(tag, cls, text) {
   const e = document.createElement(tag);
@@ -46,12 +47,14 @@ async function loadFaqAnswers() {
 
 function setFaqFilter(f) {
   faqFilter = f;
+  faqPage = 1;
   document.querySelectorAll('[data-ffilter]').forEach(b => b.classList.toggle('active', b.dataset.ffilter === f));
   renderFaqAnswers();
 }
 
 function setFaqSearch(v) {
   faqSearch = v.trim().toLowerCase().replace(/\s+/g, '');
+  faqPage = 1;
   renderFaqAnswers();
 }
 
@@ -75,9 +78,15 @@ function renderFaqAnswers() {
     c.appendChild(empty);
     return;
   }
+  faqPage = clampPage(faqPage, rows.length);
+  const from = (faqPage - 1) * PAGE_SIZE;
   const list = el('div', 'uq-list');
-  rows.forEach(r => list.appendChild(buildFaqRow(r)));
+  rows.slice(from, from + PAGE_SIZE).forEach(r => list.appendChild(buildFaqRow(r)));
   c.appendChild(list);
+  const pager = buildPager(rows.length, faqPage, p => {
+    faqPage = p; renderFaqAnswers(); scrollListTop('faq-list-container');
+  });
+  if (pager) c.appendChild(pager);
 }
 
 function buildFaqRow(r) {

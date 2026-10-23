@@ -168,3 +168,49 @@ grant execute on function public.admin_list_accounts() to authenticated;
 grant execute on function public.admin_set_telegram_id(uuid, bigint) to authenticated;
 grant execute on function public.admin_list_unanswered(integer, boolean) to authenticated;
 grant execute on function public.admin_resolve_query(text, text) to authenticated;
+
+
+-- ══════════════════════════════════════════════════════════════
+-- 4. 직원 본인이 텔레그램 연결 (현장영업 가이드 메인 화면, 로그아웃 옆)
+--   승인된 계정만 자기 계정에 텔레그램 ID 를 넣거나 해제할 수 있다.
+--   다른 계정이 이미 쓰는 ID 는 거부한다 (옮기려면 관리자 페이지에서).
+--   본인 확인은 없다 — 남의 ID 를 넣는 위험은 가이드 비밀번호를 남에게 알려주는 것과
+--   같은 수준이라 별도 인증은 두지 않았다. 관리자는 회원 목록에서 언제든 확인·해제.
+-- ══════════════════════════════════════════════════════════════
+drop function if exists public.create_telegram_link_code();
+drop function if exists public.claim_telegram_link(text, bigint);
+drop function if exists public.check_telegram_link(text);
+drop table if exists public.telegram_link_codes;
+
+create or replace function public.set_my_telegram_id(tg_id bigint)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if not exists (select 1 from public.profiles where id = auth.uid() and status = 'approved') then
+    raise exception 'not approved';
+  end if;
+  if tg_id is null or tg_id <= 0 then
+    raise exception 'invalid telegram id';
+  end if;
+  if exists (select 1 from public.profiles where telegram_id = tg_id and id <> auth.uid()) then
+    raise exception 'telegram id already used';
+  end if;
+  update public.profiles set telegram_id = tg_id where id = auth.uid();
+end;
+$$;
+
+-- 본인 연결 해제
+create or replace function public.unlink_my_telegram()
+returns void
+language plpgsql security definer set search_path = public
+as $$
+begin
+  update public.profiles set telegram_id = null where id = auth.uid();
+end;
+$$;
+
+revoke all on function public.set_my_telegram_id(bigint) from public, anon;
+grant execute on function public.set_my_telegram_id(bigint) to authenticated;
+revoke all on function public.unlink_my_telegram() from public, anon;
+grant execute on function public.unlink_my_telegram() to authenticated;

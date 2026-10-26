@@ -46,6 +46,8 @@ alter table public.bot_query_logs add column if not exists resolved_at timestamp
 alter table public.bot_query_logs add column if not exists resolved_note text;
 -- 관리자가 '삭제'한 질문 (목록에서만 빼고 기록은 남긴다 — 질문 통계용, 되살리기 가능)
 alter table public.bot_query_logs add column if not exists dismissed_at timestamptz;
+-- 봇이 실제로 한 답 (출처 줄 포함, 표는 글로) — 관리자가 👎 받은 답이 뭐였는지 보려고
+alter table public.bot_query_logs add column if not exists answer text;
 -- 답변마다 붙는 id — 👍/👎 버튼을 누르면 이 id 로 찾아 feedback(1/-1)을 적는다
 alter table public.bot_query_logs add column if not exists msg_id text;
 create index if not exists bot_query_logs_msg_id_idx on public.bot_query_logs (msg_id) where msg_id is not null;
@@ -115,7 +117,8 @@ returns table (
   bots text,          -- 어느 봇에서 나온 질문인지 (main=운영, personal=노트북 개인 봇)
   first_asked timestamptz,
   dismissed_at timestamptz,
-  bad_count bigint    -- 👎 받은 횟수
+  bad_count bigint,   -- 👎 받은 횟수
+  last_answer text    -- 봇이 한 답 (👎 받은 답 우선, 없으면 가장 최근 답)
 )
 language plpgsql security definer set search_path = public
 as $$
@@ -147,7 +150,9 @@ begin
            string_agg(distinct b.bot, ','),
            min(b.asked_at),
            max(b.dismissed_at),
-           count(*) filter (where b.feedback = -1)
+           count(*) filter (where b.feedback = -1),
+           (array_agg(b.answer order by (b.feedback = -1) desc nulls last, b.asked_at desc)
+              filter (where b.answer is not null))[1]
     from base b
     group by b.k
     -- 한 번 삭제한 질문은 같은 질문이 또 들어와도 다시 올리지 않는다 (처리 완료와 같은 방식)
@@ -157,6 +162,29 @@ begin
     limit 300;
 end;
 $$;
+
+-- 답변 품질 현황 (미해결 탭 위 한 줄): 기간 내 질문 수 · 👍 · 👎 · 자료 없음
+create or replace function public.admin_bot_stats(days integer default 30)
+returns table (bot text, total bigint, up bigint, down bigint, no_data bigint)
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if not exists (select 1 from public.profiles where id = auth.uid() and is_admin) then
+    raise exception 'unauthorized';
+  end if;
+  return query
+    select l.bot, count(*),
+           count(*) filter (where l.feedback = 1),
+           count(*) filter (where l.feedback = -1),
+           count(*) filter (where l.found = false and l.route in ('no_coverage', 'no_result', 'clarify_nohit', 'llm_general'))
+    from public.bot_query_logs l
+    where l.asked_at > now() - make_interval(days => days)
+      and l.route not in ('smalltalk', 'empty', 'no_intake', 'easter_egg')
+    group by l.bot;
+end;
+$$;
+revoke all on function public.admin_bot_stats(integer) from public, anon;
+grant execute on function public.admin_bot_stats(integer) to authenticated;
 
 -- 삭제(목록에서 빼기) / 되살리기 — 같은 질문(정규화 기준) 전체에 적용. 여러 개를 한 번에.
 create or replace function public.admin_dismiss_queries(qs text[], dismiss boolean default true)

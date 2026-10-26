@@ -83,8 +83,31 @@ let unansweredPage = 1;
 let unansweredShowDismissed = false;   // true = 삭제한 질문만 보기
 const unansweredSelected = new Set();  // 체크한 질문 (페이지를 넘겨도 유지)
 
+/* 답변 품질 현황 한 줄 — 기간 내 질문·👍·👎·자료없음 (봇별) */
+async function loadBotStats() {
+  const el = document.getElementById('uq-stats');
+  if (!el) return;
+  const { data, error } = await sb.rpc('admin_bot_stats', { days: unansweredDays });
+  if (error || !data) { el.textContent = ''; return; }
+  const BOT_LABEL = { main: '운영 봇', personal: '개인 봇' };
+  el.textContent = '';
+  const head = document.createElement('span');
+  head.className = 'uq-stats-head';
+  head.textContent = '최근 ' + unansweredDays + '일 답변 품질';
+  el.appendChild(head);
+  data.sort((a, b) => (a.bot === 'personal' ? -1 : 1)).forEach(r => {
+    const rate = r.total ? Math.round(r.no_data / r.total * 100) : 0;
+    const item = document.createElement('span');
+    item.className = 'uq-stats-item';
+    item.textContent = (BOT_LABEL[r.bot] || r.bot) + ' — 질문 ' + r.total + ' · 👍 ' + r.up + ' · 👎 ' + r.down +
+      ' · 자료없음 ' + r.no_data + ' (' + rate + '%)';
+    el.appendChild(item);
+  });
+}
+
 async function loadUnanswered() {
   setUnansweredLoading('불러오는 중...');
+  loadBotStats();
   const { data, error } = await sb.rpc('admin_list_unanswered', {
     days: unansweredDays, include_resolved: unansweredShowResolved, show_dismissed: unansweredShowDismissed,
   });
@@ -181,6 +204,22 @@ function buildUnansweredRow(r) {
   meta.textContent = kindText + ' · ' + r.ask_count + '회 · 마지막 ' + last +
     (bots ? ' · ' + bots : '') + (r.askers ? ' · ' + r.askers : '');
   main.appendChild(q); main.appendChild(meta);
+  // 봇이 실제로 한 답 — 👎 받은 답이 뭐였는지 보고 원인(자료 틀림/자료 없음/봇 해석)을 판단
+  if (r.last_answer) {
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'uq-ans-toggle';
+    toggle.textContent = r.bad_count > 0 ? '👎 받은 봇 답변 보기' : '봇 답변 보기';
+    const box = document.createElement('div');
+    box.className = 'uq-answer';
+    box.hidden = true;
+    box.textContent = r.last_answer;
+    toggle.onclick = () => {
+      box.hidden = !box.hidden;
+      toggle.textContent = box.hidden ? (r.bad_count > 0 ? '👎 받은 봇 답변 보기' : '봇 답변 보기') : '봇 답변 접기';
+    };
+    main.append(toggle, box);
+  }
   if (r.dismissed_at) {
     const done = document.createElement('div');
     done.className = 'uq-done dismissed';
@@ -308,7 +347,7 @@ async function copyUnanswered(btn) {
     const t = String(v == null ? '' : v).replace(/[\t\r\n]+/g, ' ').trim();
     return /^[=+\-@]/.test(t) ? "'" + t : t;
   };
-  const head = ['번호', '질문', '유형', '질문 횟수', '질문자(횟수)', '처음 질문', '마지막 질문', '출처', '처리 상태', '처리 메모', '답변'];
+  const head = ['번호', '질문', '유형', '질문 횟수', '질문자(횟수)', '처음 질문', '마지막 질문', '출처', '처리 상태', '처리 메모', '봇 답변', '답변'];
   const rows = unanswered.map((r, i) => [
     i + 1,
     r.query,
@@ -320,6 +359,7 @@ async function copyUnanswered(btn) {
     (r.bots || '').split(',').filter(Boolean).map(b => BOT_LABEL[b] || b).join(' · '),
     r.resolved_at ? '처리 완료 ' + fmt(r.resolved_at) : '미처리',
     r.resolved_note,
+    r.last_answer,
     '',
   ]);
   const tsv = [head, ...rows].map(cols => cols.map(clean).join('\t')).join('\n');

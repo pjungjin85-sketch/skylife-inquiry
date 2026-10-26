@@ -490,6 +490,17 @@ body.page-admin{background:var(--bg);}
 .uq-done{font-size:var(--t-xs);color:var(--ok);margin-top:4px;}
 .uq-row.resolved .uq-query{color:var(--light);font-weight:500;}
 .uq-actions{flex:0 0 auto;}
+/* 답변 품질 현황 · 봇 답변 보기 */
+.uq-stats{display:flex;flex-wrap:wrap;gap:6px var(--s-4);align-items:baseline;font-size:var(--t-xs);color:var(--mid);
+  background:var(--bg2);border-radius:var(--r-md);padding:10px 14px;margin-bottom:var(--s-4);}
+.uq-stats:empty{display:none;}
+.uq-stats-head{font-weight:700;color:var(--dark);}
+.uq-stats-item{font-variant-numeric:tabular-nums;}
+.uq-ans-toggle{margin-top:6px;padding:0;border:none;background:none;font:inherit;font-size:var(--t-xs);color:var(--mid);
+  text-decoration:underline;cursor:pointer;}
+.uq-ans-toggle:hover{color:var(--black);}
+.uq-answer{margin-top:6px;padding:10px 12px;background:var(--bg2);border-left:3px solid var(--border);border-radius:var(--r-sm);
+  font-size:var(--t-xs);color:var(--dark);line-height:1.7;white-space:pre-line;overflow-wrap:anywhere;}
 .uq-toggle2{font-size:var(--t-xs);color:var(--mid);}
 #uq-resolved-toggle[style*="none"] + .uq-toggle2{margin-left:auto;}
 .uq-pick{flex:0 0 auto;width:16px;height:16px;accent-color:var(--black);cursor:pointer;align-self:center;}

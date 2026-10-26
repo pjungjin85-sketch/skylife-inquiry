@@ -46,6 +46,9 @@ alter table public.bot_query_logs add column if not exists resolved_at timestamp
 alter table public.bot_query_logs add column if not exists resolved_note text;
 -- 관리자가 '삭제'한 질문 (목록에서만 빼고 기록은 남긴다 — 질문 통계용, 되살리기 가능)
 alter table public.bot_query_logs add column if not exists dismissed_at timestamptz;
+-- 답변마다 붙는 id — 👍/👎 버튼을 누르면 이 id 로 찾아 feedback(1/-1)을 적는다
+alter table public.bot_query_logs add column if not exists msg_id text;
+create index if not exists bot_query_logs_msg_id_idx on public.bot_query_logs (msg_id) where msg_id is not null;
 
 create index if not exists bot_query_logs_asked_at_idx on public.bot_query_logs (asked_at desc);
 create index if not exists bot_query_logs_found_idx on public.bot_query_logs (found, asked_at desc);
@@ -111,7 +114,8 @@ returns table (
   resolved_at timestamptz, resolved_note text,
   bots text,          -- 어느 봇에서 나온 질문인지 (main=운영, personal=노트북 개인 봇)
   first_asked timestamptz,
-  dismissed_at timestamptz
+  dismissed_at timestamptz,
+  bad_count bigint    -- 👎 받은 횟수
 )
 language plpgsql security definer set search_path = public
 as $$
@@ -125,8 +129,8 @@ begin
              coalesce(p.name || ' (' || p.agency_name || ')', '미등록 ' || l.user_id) as who
       from public.bot_query_logs l
       left join public.profiles p on p.telegram_id::text = l.user_id
-      where l.found = false
-        and l.route in ('no_coverage', 'no_result', 'clarify_nohit', 'llm_general')
+      where ((l.found = false and l.route in ('no_coverage', 'no_result', 'clarify_nohit', 'llm_general'))
+             or l.feedback = -1)   -- 답은 했지만 직원이 👎(틀렸어요)를 누른 질문
         and l.asked_at > now() - make_interval(days => days)
     ),
     per as (
@@ -142,7 +146,8 @@ begin
            max(b.resolved_note),
            string_agg(distinct b.bot, ','),
            min(b.asked_at),
-           max(b.dismissed_at)
+           max(b.dismissed_at),
+           count(*) filter (where b.feedback = -1)
     from base b
     group by b.k
     -- 한 번 삭제한 질문은 같은 질문이 또 들어와도 다시 올리지 않는다 (처리 완료와 같은 방식)

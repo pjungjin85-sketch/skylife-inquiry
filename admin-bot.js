@@ -176,7 +176,9 @@ function buildUnansweredRow(r) {
   const kinds = [...new Set((r.routes || '').split(',').map(x => ROUTE_LABEL[x] || x))].join(' · ');
   const BOT_LABEL = { main: '운영 봇', personal: '개인 봇' };
   const bots = (r.bots || '').split(',').filter(Boolean).map(b => BOT_LABEL[b] || b).join('·');
-  meta.textContent = kinds + ' · ' + r.ask_count + '회 · 마지막 ' + last +
+  // 👎 받은 질문은 '자료 없음'이 아니라 '틀린 답'이라 따로 표시 (경로 이름 대신)
+  const kindText = r.bad_count > 0 ? '👎 틀린 답 신고 ' + r.bad_count + '회' : kinds;
+  meta.textContent = kindText + ' · ' + r.ask_count + '회 · 마지막 ' + last +
     (bots ? ' · ' + bots : '') + (r.askers ? ' · ' + r.askers : '');
   main.appendChild(q); main.appendChild(meta);
   if (r.dismissed_at) {
@@ -310,7 +312,7 @@ async function copyUnanswered(btn) {
   const rows = unanswered.map((r, i) => [
     i + 1,
     r.query,
-    [...new Set((r.routes || '').split(',').map(x => ROUTE_LABEL[x] || x))].join(' · '),
+    r.bad_count > 0 ? '틀린 답 신고(👎 ' + r.bad_count + '회)' : [...new Set((r.routes || '').split(',').map(x => ROUTE_LABEL[x] || x))].join(' · '),
     r.ask_count,
     r.askers,
     fmt(r.first_asked),

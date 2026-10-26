@@ -309,3 +309,13 @@ inquiries
 - 회원 목록: 접속 기록 없음이 모바일 라벨과 겹쳐 "접속 접속 기록 없음" → `formatLastSeen` 이 '기록 없음' 반환
 - 회원 목록: 모바일에서 긴 이름·소속은 말줄임 대신 줄바꿈
 - 메인 탭 줄(5개): 모바일에서 오른쪽 끝 흐림(mask)으로 더 있음을 표시, 고른 탭은 가운데로 스크롤
+
+---
+
+## 2026-10-26 업데이트 — 봇 미해결 질문에 👎(틀린 답 신고) 포함 (`e841852`)
+
+- 봇 답변에 👍/👎 버튼이 생김 (mobile-work-support-bot `messenger/feedback.py`)
+- `bot_query_logs.msg_id` (답변별 id) + 인덱스 — 버튼이 이 id 로 `feedback` 을 적는다
+- `admin_list_unanswered`: 기존(자료 없음 경로) + `feedback = -1` 질문도 포함, `bad_count` 반환
+- 목록·엑셀 복사 유형 칸에 "👎 틀린 답 신고 N회"
+- 실제 DB 에서 기록 → 목록 노출 확인 후 테스트 줄 삭제
